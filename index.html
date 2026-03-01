@@ -37,6 +37,26 @@
 		html {
 			scroll-behavior: smooth;
 		}
+
+		.banner-blur-overlay {
+			position: relative;
+			overflow: hidden;
+		}
+
+		.banner-blur-overlay::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.1);
+			backdrop-filter: blur(2px);
+			-webkit-backdrop-filter: blur(2px);
+			z-index: 1;
+		}
+
+		.banner-blur-overlay .container {
+			position: relative;
+			z-index: 2;
+		}
 	</style>
 
 </head>
@@ -80,7 +100,7 @@
 		<!-- Content -->
 		<div class="page-content">
 			<!-- Section Banner -->
-			<div class="dlab-bnr-inr dlab-bnr-inr-md p-t100 text-center bg-pt"
+			<div class="dlab-bnr-inr dlab-bnr-inr-md p-t100 text-center bg-pt banner-blur-overlay"
 				style="background-image:url(images/main-slider/slide1.jpg); min-height:50vh;">
 				<div class="container">
 					<div class="dlab-bnr-inr-entry align-m text-white">
@@ -207,21 +227,19 @@
 		<!-- Our Job END -->
 		<!-- Apps Info -->
 		<div id="apps-info" class="section-full content-inner-1 bg-img-fix overlay-black-dark"
-			style="background-image:url(../images/background/bg1.jpg); margin-bottom:0;">
+			style="background-image:url(../images/background/bg1.jpg); margin-bottom:0; padding-bottom:60px;">
 			<div class="container">
 				<div class="row dzseth app-info">
 					<div class="col-lg-6 align-self-end"><img src="images/iphone.png" alt=""></div>
 					<div class="col-lg-6 dis-tbl align-self-center">
 						<div class="dis-tbl-cell p-tb30 text-white">
-							<h2 class="font-weight-700 text-secondry font-40">Get WinJob Mobile App</h2>
-							<p class="font-18 text-secondry">Lorem Ipsum is simply dummy text of the printing and
-								typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since
-								the 1500s, when an unknown printer took a galley of type and scrambled...</p>
+							<h2 class="font-weight-700 text-secondry font-40">Andarilhos das Terras Livres</h2>
+							<p class="font-18 text-secondry">Grupo criado para compartilhar informações relevantes sobre
+								a área free tibiana.</p>
 							<div class="m-t10">
-								<a href="#" class="site-button radius-xl button-md m-r10 m-b10"><i
-										class="ti-control-play m-r5"></i> Google Play</a>
-								<a href="#" class="site-button radius-xl button-md outline white"><i
-										class="ti-apple m-r5"></i> App Store</a>
+								<a href="https://chat.whatsapp.com/JMGZ9tORv6c65KOQAD0xAQ" target="_blank"
+									rel="noopener noreferrer" class="site-button radius-xl button-md m-r10 m-b10"><i
+										class="fa fa-whatsapp m-r5"></i> Entrar no WhatsApp</a>
 							</div>
 						</div>
 					</div>
@@ -237,13 +255,12 @@
 				<div class="row justify-content-between">
 					<div class="col-lg-2 col-md-6 col-sm-6 col-7 footer-col-4">
 						<div class="widget widget_services border-0">
-							<h5 class="m-b30 text-white">Useful Link</h5>
+							<h5 class="m-b30 text-white">Links Úteis</h5>
 							<ul>
-								<li><a href="javascript:void(0);">Create Account</a></li>
-								<li><a href="javascript:void(0);">Company Philosophy </a></li>
-								<li><a href="javascript:void(0);">Corporate Culture</a></li>
-								<li><a href="javascript:void(0);">Portfolio</a></li>
-								<li><a href="javascript:void(0);">Client Management</a></li>
+								<li><a href="https://tibiaroute.com/fiendish-map" target="_blank"
+										rel="noopener noreferrer">Fiendish Map</a></li>
+								<li><a href="https://akurielgamer.github.io/tibia-map-spawn/index.html?point=955,818,10,100"
+										target="_blank" rel="noopener noreferrer">Tibia Map Spawn</a></li>
 							</ul>
 						</div>
 					</div>
