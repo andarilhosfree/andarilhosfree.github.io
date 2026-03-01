@@ -1,10 +1,24 @@
 (function () {
     var button = document.querySelector('.btn-fly');
     var listContainer = document.querySelector('.other-job-list');
+    var charactersSection = listContainer ? listContainer.closest('.section-full') : null;
+    var filterTabs = charactersSection ? charactersSection.querySelector('.job-search-tabs') : null;
+    var filterForm = filterTabs ? filterTabs.querySelector('form') : null;
+    var nameInput = filterForm ? filterForm.querySelector('input[placeholder="Nome do personagem"]') : null;
+    var vocationSelect = filterForm ? filterForm.querySelector('select[title="Vocação"]') : null;
+    var worldInput = filterForm ? filterForm.querySelector('input[placeholder="Mundo"]') : null;
+    var searchButton = filterForm ? filterForm.querySelector('button.site-button.btn-block') : null;
     var csvPath = 'ANDARILHOS FREE ACCOUNT - Página1.csv';
     var initialVisibleCount = 6;
     var allRows = [];
     var isExpanded = false;
+    var debounceTimer = null;
+    var filterState = {
+        name: '',
+        vocation: '',
+        world: ''
+    };
+    var clearFilterButton = null;
 
     if (!button || !listContainer) {
         return;
@@ -49,6 +63,10 @@
     function normalizeValue(value) {
         var normalized = (value || '').trim();
         return normalized ? normalized : '-';
+    }
+
+    function normalizeText(value) {
+        return String(value || '').trim().toLowerCase();
     }
 
     function getVocationBadge(rawVocation) {
@@ -143,11 +161,197 @@
         listContainer.innerHTML = cards.join('');
     }
 
+    function getCurrentVocationValue() {
+        if (!vocationSelect) {
+            return '';
+        }
+
+        return normalizeText(vocationSelect.value);
+    }
+
+    function hasActiveFilters() {
+        return !!(filterState.name || filterState.vocation || filterState.world);
+    }
+
+    function applyFilters(rows) {
+        var filteredRows = rows.slice();
+
+        if (filterState.name) {
+            filteredRows = filteredRows.filter(function (character) {
+                return normalizeText(character.NOME).indexOf(filterState.name) !== -1;
+            });
+        }
+
+        if (filterState.world) {
+            filteredRows = filteredRows.filter(function (character) {
+                return normalizeText(character.MUNDO).indexOf(filterState.world) !== -1;
+            });
+        }
+
+        if (filterState.vocation) {
+            var vocationMatchRows = [];
+            var withoutVocationRows = [];
+
+            filteredRows.forEach(function (character) {
+                var characterVocation = normalizeText(character['VOCAÇÃO']);
+
+                if (!characterVocation) {
+                    withoutVocationRows.push(character);
+                    return;
+                }
+
+                if (characterVocation === filterState.vocation) {
+                    vocationMatchRows.push(character);
+                }
+            });
+
+            filteredRows = vocationMatchRows.concat(withoutVocationRows);
+        }
+
+        return filteredRows;
+    }
+
+    function updateActionButtonsVisibility() {
+        var isFiltering = hasActiveFilters();
+
+        button.style.display = isFiltering ? 'none' : '';
+
+        if (clearFilterButton) {
+            clearFilterButton.style.display = isFiltering ? 'block' : 'none';
+        }
+    }
+
+    function renderFilteredState() {
+        var filteredRows = applyFilters(allRows);
+        renderAllCharacters(filteredRows);
+        button.setAttribute('aria-expanded', 'false');
+        updateActionButtonsVisibility();
+    }
+
     function renderByState() {
+        if (hasActiveFilters()) {
+            renderFilteredState();
+            return;
+        }
+
         var visibleRows = isExpanded ? allRows : allRows.slice(0, initialVisibleCount);
         renderAllCharacters(visibleRows);
         button.textContent = isExpanded ? 'Mostrar menos' : 'Todos os personagens';
         button.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+        updateActionButtonsVisibility();
+    }
+
+    function setSelectPickerValue(selectElement, value) {
+        if (!selectElement) {
+            return;
+        }
+
+        var hasJQuery = typeof window.jQuery !== 'undefined';
+        var hasSelectPicker = hasJQuery && typeof window.jQuery(selectElement).selectpicker === 'function';
+
+        if (hasSelectPicker) {
+            window.jQuery(selectElement).selectpicker('val', value);
+            return;
+        }
+
+        selectElement.value = value;
+    }
+
+    function clearFilters() {
+        filterState.name = '';
+        filterState.vocation = '';
+        filterState.world = '';
+        isExpanded = false;
+
+        if (nameInput) {
+            nameInput.value = '';
+        }
+
+        if (worldInput) {
+            worldInput.value = '';
+        }
+
+        setSelectPickerValue(vocationSelect, '');
+        renderByState();
+    }
+
+    function createClearFilterButton() {
+        if (!searchButton || clearFilterButton) {
+            return;
+        }
+
+        clearFilterButton = document.createElement('button');
+        clearFilterButton.type = 'button';
+        clearFilterButton.className = 'site-button-secondry btn-block';
+        clearFilterButton.textContent = 'LIMPAR FILTRO';
+        clearFilterButton.style.marginTop = '10px';
+        clearFilterButton.style.display = 'none';
+
+        searchButton.insertAdjacentElement('afterend', clearFilterButton);
+
+        clearFilterButton.addEventListener('click', function (event) {
+            event.preventDefault();
+            clearFilters();
+        });
+    }
+
+    function bindFilterEvents() {
+        if (!filterForm) {
+            return;
+        }
+
+        if (nameInput) {
+            nameInput.addEventListener('input', function () {
+                window.clearTimeout(debounceTimer);
+                debounceTimer = window.setTimeout(function () {
+                    filterState.name = normalizeText(nameInput.value);
+                    isExpanded = false;
+                    renderByState();
+                }, 2000);
+            });
+        }
+
+        if (vocationSelect) {
+            vocationSelect.addEventListener('change', function () {
+                filterState.vocation = getCurrentVocationValue();
+                isExpanded = false;
+                renderByState();
+            });
+
+            if (typeof window.jQuery !== 'undefined') {
+                window.jQuery(vocationSelect).on('changed.bs.select', function () {
+                    filterState.vocation = getCurrentVocationValue();
+                    isExpanded = false;
+                    renderByState();
+                });
+            }
+        }
+
+        filterForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            filterState.world = worldInput ? normalizeText(worldInput.value) : '';
+            if (nameInput) {
+                filterState.name = normalizeText(nameInput.value);
+            }
+            filterState.vocation = getCurrentVocationValue();
+            isExpanded = false;
+            renderByState();
+        });
+
+        if (searchButton) {
+            searchButton.addEventListener('click', function (event) {
+                event.preventDefault();
+
+                filterState.world = worldInput ? normalizeText(worldInput.value) : '';
+                if (nameInput) {
+                    filterState.name = normalizeText(nameInput.value);
+                }
+                filterState.vocation = getCurrentVocationValue();
+                isExpanded = false;
+                renderByState();
+            });
+        }
     }
 
     function loadCharactersFromCsv() {
@@ -168,13 +372,16 @@
     button.addEventListener('click', function (event) {
         event.preventDefault();
 
-        if (!allRows.length) {
+        if (!allRows.length || hasActiveFilters()) {
             return;
         }
 
         isExpanded = !isExpanded;
         renderByState();
     });
+
+    createClearFilterButton();
+    bindFilterEvents();
 
     loadCharactersFromCsv().catch(function (error) {
         console.error(error);
