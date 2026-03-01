@@ -95,6 +95,108 @@
 			color: #fff;
 		}
 
+		.other-job-list .title-head {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.other-job-list .title-head .site-button {
+			margin: 0;
+			vertical-align: middle;
+		}
+
+		.other-job-list .title-head .vocation-druid {
+			background: #2eaf63;
+			border-color: #2eaf63;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-monk {
+			background: #7a4bd1;
+			border-color: #7a4bd1;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-paladin {
+			background: #f3c43f;
+			border-color: #f3c43f;
+			color: #222;
+		}
+
+		.other-job-list .title-head .vocation-sorcerer {
+			background: #d74c4c;
+			border-color: #d74c4c;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-knight {
+			background: #4d4d4d;
+			border-color: #4d4d4d;
+			color: #fff;
+		}
+
+		.character-filter-tabs {
+			text-align: left;
+		}
+
+		.character-filter-tabs .nav-tabs {
+			justify-content: flex-start;
+		}
+
+		.character-filter-tabs .tab-content {
+			padding: 18px 24px 14px;
+			border: 1px solid #d9d9d9;
+			border-radius: 0 12px 12px 12px;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10 {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div {
+			flex: 0 0 26% !important;
+			max-width: 26% !important;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
+			flex: 0 0 20.8% !important;
+			max-width: 20.8% !important;
+		}
+
+		.character-filter-tabs .tab-pane input.form-control,
+		.character-filter-tabs .tab-pane select,
+		.character-filter-tabs .tab-pane .site-button.btn-block {
+			width: 100%;
+			max-width: 100%;
+			margin: 0 auto;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow input.form-control,
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow select,
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow .bootstrap-select {
+			width: 80% !important;
+			max-width: 80% !important;
+			margin: 0 auto !important;
+		}
+
+		.character-filter-tabs .site-button.btn-block {
+			height: 48px;
+			line-height: 48px;
+			padding: 0 20px;
+			border: 1px solid #d9d9d9 !important;
+			border-radius: 8px;
+			box-shadow: none;
+		}
+
+		.tab-content.bg-white {
+			border-radius: 0px 10px 10px 10px;
+			padding: 10px 12px 0px 12px;
+		}
+
 		@media (max-width: 767.98px) {
 			.page-content {
 				margin-bottom: 0 !important;
@@ -138,6 +240,22 @@
 				width: 34px;
 				height: 34px;
 				line-height: 34px;
+			}
+
+			.character-filter-tabs .tab-pane .row.sp10>div {
+				flex: 0 0 100%;
+				max-width: 100%;
+			}
+
+			.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
+				flex: 0 0 100%;
+				max-width: 100%;
+			}
+
+			.character-filter-tabs .tab-pane input.form-control,
+			.character-filter-tabs .tab-pane select,
+			.character-filter-tabs .tab-pane .site-button.btn-block {
+				max-width: 100%;
 			}
 		}
 	</style>
@@ -202,107 +320,50 @@
 		<div class="section-full bg-gray content-inner bg-img-fix"
 			style="background-image:url(images/background/bg1.jpg);">
 			<div class="container">
-				<div class="other-job-list">
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Ozzy Iron Man</a>
-								<span class="site-button radius-xl button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Kalibra</li>
-								<li><strong>Level:</strong> 388</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> Não Me Toque/RS </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
-						</div>
-					</div>
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Dib Molotov</a>
-								<span class="site-button radius-xl yellow button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Celebra</li>
-								<li><strong>Level:</strong> 380</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> Manhuaçu/MG </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
-						</div>
-					</div>
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Venomous Vic</a>
-								<span class="site-button radius-xl green button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Celebra</li>
-								<li><strong>Level:</strong> 373</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> São José dos Campos/SP </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
-						</div>
-					</div>
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Reno on AreaFree</a>
-								<span class="site-button radius-xl red button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Yonabra</li>
-								<li><strong>Level:</strong> 366</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> BH/MG -Salvador/BA </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
-						</div>
-					</div>
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Rockblaze</a>
-								<span class="site-button radius-xl brown button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Belobra</li>
-								<li><strong>Level:</strong> 356</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> - </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
-						</div>
-					</div>
-					<div class="job-box-list">
-						<div class="job-info-box">
-							<h3 class="m-t0 font-weight-600 title-head">
-								<a href="#" class="text-secondry m-r30">Toxotis</a>
-								<span class="site-button radius-xl button-sm">-</span>
-							</h3>
-							<ul class="job-info">
-								<li><strong>Mundo: </strong> Astera</li>
-								<li><strong>Level:</strong> 321</li>
-								<li><i class="ti-location-pin text-black m-r10"></i> - </li>
-							</ul>
-						</div>
-						<div class="job-company-logo">
-							<img src="images/logo/logo.jpeg" alt="">
+				<div class="section-head text-center text-white">
+					<h2 class="font-40 font-weight-600">Personagens</h2>
+				</div>
+				<div class="max-w800 m-auto text-center job-search-tabs">
+					<div class="dlab-tabs m-b30">
+						<ul class="nav nav-tabs">
+							<li>
+								<a data-toggle="tab" href="#find-character" class="active show">
+									<span class="title-head">FILTRAR PERSONAGEM</span>
+								</a>
+							</li>
+						</ul>
+						<div class="tab-content bg-white">
+							<div id="web-design-1" class="tab-pane active">
+								<form>
+									<div class="row sp10">
+										<div class="col-lg-3 col-sm-6 m-b20">
+											<input type="text" class="form-control" placeholder="Nome">
+										</div>
+										<div class="col-lg-3 col-sm-6 m-b20 filter-narrow">
+											<select title="Vocação">
+												<option>Knight</option>
+												<option>Paladin</option>
+												<option>Sorcerer</option>
+												<option>Druid</option>
+												<option>Monk</option>
+											</select>
+										</div>
+										<div class="col-lg-3 col-sm-6 m-b20 filter-narrow">
+											<input type="text" class="form-control" placeholder="Mundo">
+										</div>
+										<div class="col-lg-3 col-sm-6 m-b20">
+											<button class="site-button btn-block">PESQUISAR</button>
+										</div>
+									</div>
+								</form>
+							</div>
 						</div>
 					</div>
 				</div>
+				<div class="other-job-list"></div>
 				<div class="row justify-content-between">
 					<div class="col-lg-12 m-tb30 text-center">
-						<button class="site-button radius-xl button-lg btn-fly">All Categories</button>
+						<button class="site-button radius-xl button-lg btn-fly">Todos os personagens</button>
 					</div>
 				</div>
 			</div>
@@ -310,7 +371,7 @@
 		<!-- Our Job END -->
 		<!-- Apps Info -->
 		<div id="apps-info" class="section-full content-inner-1 bg-img-fix overlay-black-dark"
-			style="background-image:url(../images/background/bg1.jpg); margin-bottom:0; padding-bottom:60px;">
+			style="background-image:url(images/background/bg1.jpg); margin-bottom:0; padding-bottom:60px;">
 			<div class="container">
 				<div class="row dzseth app-info">
 					<div class="col-lg-6 align-self-end"><img src="images/iphone.png" alt=""></div>
@@ -472,8 +533,7 @@
 	<script src="js/dz.ajax.js"></script><!-- Contact Us -->
 	<script src="js/custom.js"></script>
 	<!-- custom fuctions  -->
-	<!-- Go to www.addthis.com/dashboard to customize your tools -->
-	<script type="text/javascript" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5b221c5e31b4e54b"></script>
+	<script src="js/characters-list.js"></script>
 </body>
 
 </html>
