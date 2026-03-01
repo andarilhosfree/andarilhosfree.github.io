@@ -94,6 +94,8 @@
     }
 
     function buildJobCard(character) {
+        var rawName = (character.NOME || '').trim();
+        var tibiaProfileUrl = 'https://www.tibia.com/community/?name=' + encodeURIComponent(rawName).replace(/%20/g, '+');
         var nome = escapeHtml(normalizeValue(character.NOME));
         var vocationBadge = getVocationBadge(character['VOCAÇÃO']);
         var mundo = escapeHtml(normalizeValue(character.MUNDO));
@@ -104,7 +106,7 @@
             '<div class="job-box-list">' +
             '<div class="job-info-box">' +
             '<h3 class="m-t0 font-weight-600 title-head">' +
-            '<a href="#" class="text-secondry">' + nome + '</a>' +
+            '<a href="' + tibiaProfileUrl + '" class="text-secondry" target="_blank" rel="noopener noreferrer">' + nome + '</a>' +
             vocationBadge +
             '</h3>' +
             '<ul class="job-info">' +
