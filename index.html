@@ -57,6 +57,43 @@
 			position: relative;
 			z-index: 2;
 		}
+
+		.partner-list .partner-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			flex-wrap: nowrap;
+		}
+
+		.partner-list .partner-name {
+			white-space: nowrap;
+			font-size: 14px;
+		}
+
+		.partner-list .partner-social {
+			display: flex;
+			flex-wrap: nowrap;
+			white-space: nowrap;
+			margin: 0;
+		}
+
+		.partner-list .partner-social li {
+			margin: 0 0 0 6px;
+		}
+
+		.partner-list .partner-social .site-button {
+			width: 40px;
+			height: 40px;
+			line-height: 40px;
+			padding: 0;
+		}
+
+		.partner-list .partner-social .site-button.twitch {
+			background: #9146ff;
+			border-color: #9146ff;
+			color: #fff;
+		}
 	</style>
 
 </head>
@@ -133,7 +170,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo1.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 					<div class="job-box-list">
@@ -149,7 +186,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo2.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 					<div class="job-box-list">
@@ -165,7 +202,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo3.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 					<div class="job-box-list">
@@ -181,7 +218,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo4.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 					<div class="job-box-list">
@@ -197,7 +234,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo5.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 					<div class="job-box-list">
@@ -213,7 +250,7 @@
 							</ul>
 						</div>
 						<div class="job-company-logo">
-							<img src="images/logo/logo5.jpg" alt="">
+							<img src="images/logo/logo.jpeg" alt="">
 						</div>
 					</div>
 				</div>
@@ -266,34 +303,84 @@
 					</div>
 					<div class="col-lg-4 col-md-6 col-sm-6 col-12 footer-col-4 ">
 						<div class="widget">
-							<h5 class="m-b30 text-white">Subscribe To Our Newsletter</h5>
-							<p class="text-capitalize m-b20">Lorem Ipsum is simply dummy text of the printing and
-								typesetting industry has been the industry's standard dummy text ever since the..
-							</p>
-							<div class="subscribe-form m-b20">
-								<form class="dzSubscribe" action="script/mailchamp.php" method="post">
-									<div class="dzSubscribeMsg"></div>
-									<div class="input-group">
-										<input name="dzEmail" required="required" class="form-control"
-											placeholder="Your Email Id" type="email">
-										<span class="input-group-btn">
-											<button name="submit" value="Submit" type="submit"
-												class="site-button radius-xl">Subscribe</button>
-										</span>
-									</div>
-								</form>
-							</div>
-							<ul class="list-inline m-a0">
-								<li><a href="javascript:void(0);" class="site-button facebook circle "><i
-											class="fa fa-facebook"></i></a></li>
-								<li><a href="javascript:void(0);" class="site-button google-plus circle "><i
-											class="fa fa-google-plus"></i></a></li>
-								<li><a href="javascript:void(0);" class="site-button linkedin circle "><i
-											class="fa fa-linkedin"></i></a></li>
-								<li><a href="javascript:void(0);" class="site-button instagram circle "><i
-											class="fa fa-instagram"></i></a></li>
-								<li><a href="javascript:void(0);" class="site-button twitter circle "><i
-											class="fa fa-twitter"></i></a></li>
+							<h5 class="m-b30 text-white">Membros Parceiros</h5>
+							<p class="text-capitalize m-b20">Parceiros da comunidade Andarilhos Free.</p>
+							<ul class="list-unstyled m-a0 partner-list">
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Kalibra Hunters</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="javascript:void(0);" class="site-button facebook circle "><i
+													class="fa fa-facebook"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button instagram circle "><i
+													class="fa fa-instagram"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitter circle "><i
+													class="fa fa-twitter"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Tibia Legends BR</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="javascript:void(0);" class="site-button facebook circle "><i
+													class="fa fa-facebook"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button linkedin circle "><i
+													class="fa fa-linkedin"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button instagram circle "><i
+													class="fa fa-instagram"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Free Area Team</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="javascript:void(0);" class="site-button twitter circle "><i
+													class="fa fa-twitter"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button instagram circle "><i
+													class="fa fa-instagram"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button linkedin circle "><i
+													class="fa fa-linkedin"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Andarilhos Streamers</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="javascript:void(0);" class="site-button facebook circle "><i
+													class="fa fa-facebook"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button google-plus circle "><i
+													class="fa fa-google-plus"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button instagram circle "><i
+													class="fa fa-instagram"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item">
+									<span class="text-white partner-name">Rota Tibiana Guild</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="javascript:void(0);" class="site-button facebook circle "><i
+													class="fa fa-facebook"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitter circle "><i
+													class="fa fa-twitter"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button linkedin circle "><i
+													class="fa fa-linkedin"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+										<li><a href="javascript:void(0);" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
 							</ul>
 						</div>
 					</div>
@@ -304,12 +391,12 @@
 		<div class="footer-bottom">
 			<div class="container">
 				<div class="row">
-					<div class="col-lg-6 col-md-6 text-left "><span>Copyright © 2020 DexignLab</span> </div>
+					<div class="col-lg-6 col-md-6 text-left "><span>© 2026 AndarilhosFree Todos os direitos
+							reservados</span> </div>
 					<div class="col-lg-6 col-md-6 text-right ">
 						<div class="widget-link ">
 							<ul>
-								<li><a href="help-desk.html"> Help Desk</a></li>
-								<li><a href="privacy-policy.html"> Privacy Policy</a></li>
+								<li><a href="privacy-policy.html"> Política de Privacidade</a></li>
 							</ul>
 						</div>
 					</div>
