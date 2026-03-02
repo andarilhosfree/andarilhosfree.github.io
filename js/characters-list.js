@@ -69,6 +69,16 @@
         return String(value || '').trim().toLowerCase();
     }
 
+    function getCharacterSpriteSrc(rawSprite) {
+        var sprite = String(rawSprite || '').trim();
+
+        if (!sprite) {
+            return 'images/logo/logo.jpeg';
+        }
+
+        return sprite;
+    }
+
     function getVocationBadge(rawVocation) {
         var vocation = (rawVocation || '').trim();
 
@@ -101,6 +111,7 @@
         var mundo = escapeHtml(normalizeValue(character.MUNDO));
         var level = escapeHtml(normalizeValue(character.LEVEL));
         var cidade = escapeHtml(normalizeValue(character.Cidade));
+        var spriteSrc = escapeHtml(getCharacterSpriteSrc(character.SPRITE));
 
         return '' +
             '<div class="job-box-list">' +
@@ -116,7 +127,7 @@
             '</ul>' +
             '</div>' +
             '<div class="job-company-logo">' +
-            '<img src="images/logo/logo.jpeg" alt="">' +
+            '<img src="' + spriteSrc + '" alt="">' +
             '</div>' +
             '</div>';
     }
