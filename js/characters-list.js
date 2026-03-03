@@ -8,11 +8,22 @@
     var vocationSelect = filterForm ? filterForm.querySelector('select[title="Vocação"]') : null;
     var worldInput = filterForm ? filterForm.querySelector('input[placeholder="Mundo"]') : null;
     var searchButton = filterForm ? filterForm.querySelector('button.site-button.btn-block') : null;
+    var sheetDbApiUrl = 'https://sheetdb.io/api/v1/4s2nxmsrz851g';
+    var fetchTimeoutMs = 12000;
     var csvPath = 'ANDARILHOS FREE ACCOUNT - Página1.csv';
     var initialVisibleCount = 6;
     var allRows = [];
     var isExpanded = false;
     var debounceTimer = null;
+    var requiredColumns = ['NOME', 'VOCAÇÃO', 'MUNDO', 'LEVEL', 'Cidade', 'SPRITE'];
+    var columnAliases = {
+        NOME: 'NOME',
+        VOCACAO: 'VOCAÇÃO',
+        MUNDO: 'MUNDO',
+        LEVEL: 'LEVEL',
+        CIDADE: 'Cidade',
+        SPRITE: 'SPRITE'
+    };
     var filterState = {
         name: '',
         vocation: '',
@@ -69,6 +80,105 @@
         return String(value || '').trim().toLowerCase();
     }
 
+    function fetchWithTimeout(url, options, timeoutMs) {
+        var requestTimeout = timeoutMs || fetchTimeoutMs;
+
+        if (typeof AbortController === 'function') {
+            var controller = new AbortController();
+            var timerId = window.setTimeout(function () {
+                controller.abort();
+            }, requestTimeout);
+
+            var fetchOptions = Object.assign({}, options || {}, {
+                signal: controller.signal
+            });
+
+            return fetch(url, fetchOptions)
+                .then(function (response) {
+                    window.clearTimeout(timerId);
+                    return response;
+                })
+                .catch(function (error) {
+                    window.clearTimeout(timerId);
+                    throw error;
+                });
+        }
+
+        return new Promise(function (resolve, reject) {
+            var finished = false;
+            var timer = window.setTimeout(function () {
+                if (finished) {
+                    return;
+                }
+
+                finished = true;
+                reject(new Error('Tempo limite ao carregar dados.'));
+            }, requestTimeout);
+
+            fetch(url, options || {})
+                .then(function (response) {
+                    if (finished) {
+                        return;
+                    }
+
+                    finished = true;
+                    window.clearTimeout(timer);
+                    resolve(response);
+                })
+                .catch(function (error) {
+                    if (finished) {
+                        return;
+                    }
+
+                    finished = true;
+                    window.clearTimeout(timer);
+                    reject(error);
+                });
+        });
+    }
+
+    function normalizeHeaderKey(header) {
+        return String(header || '')
+            .trim()
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function normalizeCharacterRows(rows) {
+        return rows
+            .map(function (row) {
+                var normalizedRow = {};
+
+                Object.keys(row || {}).forEach(function (key) {
+                    var canonicalKey = columnAliases[normalizeHeaderKey(key)] || key;
+                    var value = String(row[key] || '').trim();
+                    var currentValue = String(normalizedRow[canonicalKey] || '').trim();
+
+                    if (!currentValue || value) {
+                        normalizedRow[canonicalKey] = value;
+                    }
+                });
+
+                return normalizedRow;
+            })
+            .filter(function (row) {
+                return String(row.NOME || '').trim() !== '';
+            });
+    }
+
+    function warnMissingColumns(rows, sourceName) {
+        var missingColumns = requiredColumns.filter(function (column) {
+            return !rows.some(function (row) {
+                return String(row[column] || '').trim() !== '';
+            });
+        });
+
+        if (missingColumns.length) {
+            console.warn('Colunas ausentes em ' + sourceName + ':', missingColumns.join(', '));
+        }
+    }
+
     function getCharacterSpriteSrc(rawSprite) {
         var sprite = String(rawSprite || '').trim();
 
@@ -86,15 +196,20 @@
             return '';
         }
 
-        var firstLetter = vocation.charAt(0).toUpperCase();
-        var classByLetter = {
-            D: 'vocation-druid',
-            M: 'vocation-monk',
-            P: 'vocation-paladin',
-            S: 'vocation-sorcerer',
-            K: 'vocation-knight'
-        };
-        var vocationClass = classByLetter[firstLetter];
+        var normalizedVocation = normalizeText(vocation);
+        var vocationClass = '';
+
+        if (normalizedVocation.indexOf('knight') !== -1) {
+            vocationClass = 'vocation-knight';
+        } else if (normalizedVocation.indexOf('paladin') !== -1) {
+            vocationClass = 'vocation-paladin';
+        } else if (normalizedVocation.indexOf('sorcerer') !== -1) {
+            vocationClass = 'vocation-sorcerer';
+        } else if (normalizedVocation.indexOf('druid') !== -1) {
+            vocationClass = 'vocation-druid';
+        } else if (normalizedVocation.indexOf('monk') !== -1) {
+            vocationClass = 'vocation-monk';
+        }
 
         if (!vocationClass) {
             return '';
@@ -158,12 +273,10 @@
                 item[headers[j]] = (values[j] || '').trim();
             }
 
-            if ((item.NOME || '').trim() !== '') {
-                rows.push(item);
-            }
+            rows.push(item);
         }
 
-        return rows;
+        return normalizeCharacterRows(rows);
     }
 
     function renderAllCharacters(rows) {
@@ -367,8 +480,33 @@
         }
     }
 
-    function loadCharactersFromCsv() {
-        return fetch(encodeURI(csvPath))
+    function fetchCharactersFromSheetDb() {
+        return fetchWithTimeout(sheetDbApiUrl, {}, fetchTimeoutMs)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Não foi possível carregar os dados do SheetDB.');
+                }
+
+                return response.json();
+            })
+            .then(function (data) {
+                if (!Array.isArray(data)) {
+                    throw new Error('Resposta inválida do SheetDB.');
+                }
+
+                var rows = normalizeCharacterRows(data);
+
+                if (!rows.length) {
+                    throw new Error('SheetDB sem personagens válidos.');
+                }
+
+                warnMissingColumns(rows, 'SheetDB');
+                return rows;
+            });
+    }
+
+    function fetchCharactersFromCsv() {
+        return fetchWithTimeout(encodeURI(csvPath), {}, fetchTimeoutMs)
             .then(function (response) {
                 if (!response.ok) {
                     throw new Error('Não foi possível carregar o arquivo CSV.');
@@ -376,9 +514,34 @@
                 return response.text();
             })
             .then(function (csvText) {
-                allRows = csvToObjects(csvText);
+                var rows = csvToObjects(csvText);
+
+                if (!rows.length) {
+                    throw new Error('CSV sem personagens válidos.');
+                }
+
+                warnMissingColumns(rows, 'CSV');
+                return rows;
+            });
+    }
+
+    function loadCharactersData() {
+        return fetchCharactersFromSheetDb()
+            .then(function (rows) {
+                allRows = rows;
                 isExpanded = false;
+                console.info('Personagens carregados via SheetDB:', rows.length);
                 renderByState();
+            })
+            .catch(function (sheetDbError) {
+                console.warn('Falha no SheetDB. Usando CSV local.', sheetDbError);
+
+                return fetchCharactersFromCsv().then(function (rows) {
+                    allRows = rows;
+                    isExpanded = false;
+                    console.info('Personagens carregados via CSV fallback:', rows.length);
+                    renderByState();
+                });
             });
     }
 
@@ -396,7 +559,7 @@
     createClearFilterButton();
     bindFilterEvents();
 
-    loadCharactersFromCsv().catch(function (error) {
+    loadCharactersData().catch(function (error) {
         console.error(error);
         button.textContent = 'Erro ao carregar personagens';
         button.disabled = true;
