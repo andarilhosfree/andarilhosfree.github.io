@@ -80,6 +80,57 @@
         return String(value || '').trim().toLowerCase();
     }
 
+    function normalizeComparableKey(value) {
+        return normalizeHeaderKey(value).replace(/[^A-Z0-9]/g, '');
+    }
+
+    function getCharacterFieldValue(character, fieldName) {
+        var normalizedFieldName = normalizeComparableKey(fieldName);
+        var keys = Object.keys(character || {});
+
+        for (var i = 0; i < keys.length; i++) {
+            if (normalizeComparableKey(keys[i]) === normalizedFieldName) {
+                return String(character[keys[i]] || '').trim();
+            }
+        }
+
+        return '';
+    }
+
+    function hasSingleWordVocation(rawVocation) {
+        var words = String(rawVocation || '')
+            .trim()
+            .split(/\s+/)
+            .filter(function (word) {
+                return word !== '';
+            });
+
+        return words.length === 1;
+    }
+
+    function shouldShowFreeSeal(character) {
+        var alwaysFreeValue = normalizeText(getCharacterFieldValue(character, 'SEMPRE FOI FREE?'));
+        var isSingleWord = hasSingleWordVocation(character['VOCAÇÃO']);
+
+        if (!isSingleWord) {
+            return false;
+        }
+
+        if (!alwaysFreeValue) {
+            return true;
+        }
+
+        if (alwaysFreeValue.indexOf('sim') === 0) {
+            return true;
+        }
+
+        if (alwaysFreeValue.charAt(0) === 'n' || alwaysFreeValue.indexOf('nao') === 0 || alwaysFreeValue.indexOf('não') === 0) {
+            return false;
+        }
+
+        return false;
+    }
+
     function fetchWithTimeout(url, options, timeoutMs) {
         var requestTimeout = timeoutMs || fetchTimeoutMs;
 
@@ -227,6 +278,10 @@
         var level = escapeHtml(normalizeValue(character.LEVEL));
         var cidade = escapeHtml(normalizeValue(character.Cidade));
         var spriteSrc = escapeHtml(getCharacterSpriteSrc(character.SPRITE));
+        var showFreeSeal = shouldShowFreeSeal(character);
+        var freeSealMarkup = showFreeSeal
+            ? '<img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;">'
+            : '';
 
         return '' +
             '<div class="job-box-list">' +
@@ -241,8 +296,9 @@
             '<li><i class="ti-location-pin text-black m-r10"></i> ' + cidade + ' </li>' +
             '</ul>' +
             '</div>' +
-            '<div class="job-company-logo">' +
-            '<img src="' + spriteSrc + '" alt="">' +
+            '<div class="job-company-logo" style="display:flex;align-items:center;justify-content:flex-end;">' +
+            freeSealMarkup +
+            '<img src="' + spriteSrc + '" alt="" style="max-width:150px;max-height:150px;width:auto;height:auto;">' +
             '</div>' +
             '</div>';
     }
