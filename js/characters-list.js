@@ -280,7 +280,7 @@
         var spriteSrc = escapeHtml(getCharacterSpriteSrc(character.SPRITE));
         var showFreeSeal = shouldShowFreeSeal(character);
         var freeSealMarkup = showFreeSeal
-            ? '<img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;">'
+            ? '<a href="#seal-disclaimer" aria-label="Ir para disclaimer do selo"><img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;"></a>'
             : '';
 
         return '' +
