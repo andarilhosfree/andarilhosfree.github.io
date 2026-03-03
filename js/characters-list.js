@@ -279,8 +279,11 @@
         var cidade = escapeHtml(normalizeValue(character.Cidade));
         var spriteSrc = escapeHtml(getCharacterSpriteSrc(character.SPRITE));
         var showFreeSeal = shouldShowFreeSeal(character);
-        var freeSealMarkup = showFreeSeal
-            ? '<a href="#seal-disclaimer" aria-label="Ir para disclaimer do selo"><img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;"></a>'
+        var freeSealDesktopMarkup = showFreeSeal
+            ? '<a href="#seal-disclaimer" class="d-none d-md-inline-block" aria-label="Ir para disclaimer do selo"><img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;"></a>'
+            : '';
+        var freeSealMobileMarkup = showFreeSeal
+            ? '<a href="#seal-disclaimer" class="d-inline-block d-md-none" aria-label="Ir para disclaimer do selo" style="position:absolute;top:0;left:-50px;top:-10px;z-index:2;"><img src="images/freeseal.png" alt="Selo Free Account" style="width:120px;max-width:120px;height:auto;display:block;"></a>'
             : '';
 
         return '' +
@@ -297,8 +300,11 @@
             '</ul>' +
             '</div>' +
             '<div class="job-company-logo" style="display:flex;align-items:center;justify-content:flex-end;">' +
-            freeSealMarkup +
-            '<img src="' + spriteSrc + '" alt="" style="max-width:150px;max-height:150px;width:auto;height:auto;">' +
+            freeSealDesktopMarkup +
+            '<div style="position:relative;display:inline-block;">' +
+            '<img src="' + spriteSrc + '" alt="" style="max-width:150px;max-height:150px;width:auto;height:auto;display:block;">' +
+            freeSealMobileMarkup +
+            '</div>' +
             '</div>' +
             '</div>';
     }
