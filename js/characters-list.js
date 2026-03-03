@@ -8,7 +8,7 @@
     var vocationSelect = filterForm ? filterForm.querySelector('select[title="Vocação"]') : null;
     var worldInput = filterForm ? filterForm.querySelector('input[placeholder="Mundo"]') : null;
     var searchButton = filterForm ? filterForm.querySelector('button.site-button.btn-block') : null;
-    var sheetDbApiUrl = 'https://sheetdb.io/api/v1/4s2nxmsrz851g';
+    var charactersApiUrl = 'https://script.google.com/macros/s/AKfycbyhDUdN2CYmLAeFkzadd1Be3n8jCZEg8HN1LeEqodVVzHO8Y5df014aYpopMO-_oKeT/exec';
     var fetchTimeoutMs = 12000;
     var csvPath = 'ANDARILHOS FREE ACCOUNT - Página1.csv';
     var initialVisibleCount = 6;
@@ -536,27 +536,27 @@
         }
     }
 
-    function fetchCharactersFromSheetDb() {
-        return fetchWithTimeout(sheetDbApiUrl, {}, fetchTimeoutMs)
+    function fetchCharactersFromApi() {
+        return fetchWithTimeout(charactersApiUrl, {}, fetchTimeoutMs)
             .then(function (response) {
                 if (!response.ok) {
-                    throw new Error('Não foi possível carregar os dados do SheetDB.');
+                    throw new Error('Não foi possível carregar os dados da API.');
                 }
 
                 return response.json();
             })
             .then(function (data) {
                 if (!Array.isArray(data)) {
-                    throw new Error('Resposta inválida do SheetDB.');
+                    throw new Error('Resposta inválida da API.');
                 }
 
                 var rows = normalizeCharacterRows(data);
 
                 if (!rows.length) {
-                    throw new Error('SheetDB sem personagens válidos.');
+                    throw new Error('API sem personagens válidos.');
                 }
 
-                warnMissingColumns(rows, 'SheetDB');
+                warnMissingColumns(rows, 'API');
                 return rows;
             });
     }
@@ -582,15 +582,15 @@
     }
 
     function loadCharactersData() {
-        return fetchCharactersFromSheetDb()
+        return fetchCharactersFromApi()
             .then(function (rows) {
                 allRows = rows;
                 isExpanded = false;
-                console.info('Personagens carregados via SheetDB:', rows.length);
+                console.info('Personagens carregados via API:', rows.length);
                 renderByState();
             })
-            .catch(function (sheetDbError) {
-                console.warn('Falha no SheetDB. Usando CSV local.', sheetDbError);
+            .catch(function (apiError) {
+                console.warn('Falha na API. Usando CSV local.', apiError);
 
                 return fetchCharactersFromCsv().then(function (rows) {
                     allRows = rows;
