@@ -22,7 +22,8 @@
         MUNDO: 'MUNDO',
         LEVEL: 'LEVEL',
         CIDADE: 'Cidade',
-        SPRITE: 'SPRITE'
+        SPRITE: 'SPRITE',
+        LASTLOGIN: 'LAST LOGIN'
     };
     var filterState = {
         name: '',
@@ -158,6 +159,36 @@
         }
 
         return 'Última Atualização - ' + value;
+    }
+
+    function formatLastLogin(rawValue) {
+        var value = String(rawValue || '').trim();
+
+        if (!value) {
+            return '';
+        }
+
+        var parsedDate = new Date(value);
+        if (!isNaN(parsedDate.getTime())) {
+            var day = pad2(parsedDate.getDate());
+            var month = pad2(parsedDate.getMonth() + 1);
+            var year = parsedDate.getFullYear();
+            var hours = pad2(parsedDate.getHours());
+            var minutes = pad2(parsedDate.getMinutes());
+
+            return 'Último Login - ' + day + '/' + month + '/' + year + ' - ' + hours + ':' + minutes;
+        }
+
+        var normalizedValue = value.replace('T', ' ').replace('Z', '');
+        var parts = normalizedValue.split(/\s+/);
+        var datePart = parts[0] || '';
+        var timePart = parts[1] || '';
+
+        if (datePart && timePart) {
+            return 'Último Login - ' + toDisplayDate(datePart) + ' - ' + timePart;
+        }
+
+        return 'Último Login - ' + value;
     }
 
     function setLastUpdateText(rows, fallbackRawValue) {
@@ -350,7 +381,49 @@
         return '<span class="site-button radius-xl button-sm ' + vocationClass + '">' + escapeHtml(vocation) + '</span>';
     }
 
+    var didInjectCharacterCardStyles = false;
+
+    function ensureCharacterCardStyles() {
+        if (didInjectCharacterCardStyles) {
+            return;
+        }
+
+        var style = document.createElement('style');
+        style.id = 'character-card-mobile-style';
+        style.textContent = [
+            '.job-box-list .character-last-login {',
+            '  display: block;',
+            '  text-align: center;',
+            '  font-size: 12px;',
+            '  margin-top: 6px;',
+            '  color: #555;',
+            '}',
+            '@media (max-width: 767.98px) {',
+            '  .job-box-list .title-head {',
+            '    display: block;',
+            '  }',
+            '  .job-box-list .character-card-name {',
+            '    font-size: 20px;',
+            '    padding-right: 50px;',
+            '    display: block !important;',
+            '    line-height: 1.2;',
+            '  }',
+            '  .job-box-list .character-card-badge {',
+            '    display: block !important;',
+            '    margin-top: 6px;',
+            '    width: 100%;',
+            '  }',
+            '}',
+            ''
+        ].join('\n');
+
+        document.head.appendChild(style);
+        didInjectCharacterCardStyles = true;
+    }
+
     function buildJobCard(character) {
+        ensureCharacterCardStyles();
+
         var rawName = (character.NOME || '').trim();
         var tibiaProfileUrl = 'https://www.tibia.com/community/?name=' + encodeURIComponent(rawName).replace(/%20/g, '+');
         var nome = escapeHtml(normalizeValue(character.NOME));
@@ -359,6 +432,7 @@
         var level = escapeHtml(normalizeValue(character.LEVEL));
         var cidade = escapeHtml(normalizeValue(character.Cidade));
         var spriteSrc = escapeHtml(getCharacterSpriteSrc(character.SPRITE));
+        var lastLogin = formatLastLogin(getCharacterFieldValue(character, 'LAST LOGIN'));
         var showFreeSeal = shouldShowFreeSeal(character);
         var freeSealDesktopMarkup = showFreeSeal
             ? '<a href="#seal-disclaimer" class="d-none d-md-inline-block" aria-label="Ir para disclaimer do selo"><img src="images/freeseal.png" alt="Selo Free Account" style="width:200px;max-width:200px;max-height:140px;height:140px;margin-right:10px;"></a>'
@@ -369,10 +443,10 @@
 
         return '' +
             '<div class="job-box-list">' +
-            '<div class="job-info-box">' +
+            '<div class="job-info-box" style="padding-right:10px;">' +
             '<h3 class="m-t0 font-weight-600 title-head">' +
-            '<a href="' + tibiaProfileUrl + '" class="text-secondry" target="_blank" rel="noopener noreferrer">' + nome + '</a>' +
-            vocationBadge +
+            '<a href="' + tibiaProfileUrl + '" class="text-secondry character-card-name" target="_blank" rel="noopener noreferrer">' + nome + '</a>' +
+            (vocationBadge ? '<div class="character-card-badge">' + vocationBadge + '</div>' : '') +
             '</h3>' +
             '<ul class="job-info">' +
             '<li><strong>Mundo: </strong> ' + mundo + '</li>' +
@@ -385,6 +459,7 @@
             '<div style="position:relative;display:inline-block;">' +
             '<img src="' + spriteSrc + '" alt="" style="max-width:150px;max-height:150px;width:auto;height:auto;display:block;">' +
             freeSealMobileMarkup +
+                (lastLogin ? '<span class="character-last-login">' + escapeHtml(lastLogin) + '</span>' : '') +
             '</div>' +
             '</div>' +
             '</div>';
