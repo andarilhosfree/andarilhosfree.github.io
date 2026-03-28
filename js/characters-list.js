@@ -30,6 +30,8 @@
         world: ''
     };
     var clearFilterButton = null;
+    var lastUpdateTargets = Array.prototype.slice.call(document.querySelectorAll('.js-last-update-text'));
+    var lastUpdateFieldName = 'LAST UPDATE';
 
     if (!button || !listContainer) {
         return;
@@ -95,6 +97,85 @@
         }
 
         return '';
+    }
+
+    function getLastUpdateRawFromRows(rows) {
+        if (!rows || !rows.length) {
+            return '';
+        }
+
+        for (var i = 0; i < rows.length; i++) {
+            var candidate = getCharacterFieldValue(rows[i], lastUpdateFieldName);
+            if (String(candidate || '').trim()) {
+                return candidate;
+            }
+        }
+
+        return '';
+    }
+
+    function pad2(value) {
+        return value < 10 ? '0' + value : String(value);
+    }
+
+    function toDisplayDate(datePart) {
+        var parts = datePart.split(/[-/]/);
+
+        if (parts.length === 3 && parts[0].length === 4) {
+            // yyyy-mm-dd -> dd/mm/yyyy
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+
+        return datePart;
+    }
+
+    function formatLastUpdateText(rawValue) {
+        var value = String(rawValue || '').trim();
+
+        if (!value) {
+            return '';
+        }
+
+        var parsedDate = new Date(value);
+        if (!isNaN(parsedDate.getTime())) {
+            var day = pad2(parsedDate.getDate());
+            var month = pad2(parsedDate.getMonth() + 1);
+            var year = parsedDate.getFullYear();
+            var hours = pad2(parsedDate.getHours());
+            var minutes = pad2(parsedDate.getMinutes());
+            var seconds = pad2(parsedDate.getSeconds());
+
+            return 'Última Atualização - ' + day + '/' + month + '/' + year + ' às ' + hours + ':' + minutes + ':' + seconds;
+        }
+
+        var normalizedValue = value.replace('T', ' ').replace('Z', '');
+        var parts = normalizedValue.split(/\s+/);
+        var datePart = parts[0] || '';
+        var timePart = parts[1] || '';
+
+        if (datePart && timePart) {
+            return 'Última Atualização - ' + toDisplayDate(datePart) + ' às ' + timePart;
+        }
+
+        return 'Última Atualização - ' + value;
+    }
+
+    function setLastUpdateText(rows, fallbackRawValue) {
+        if (!lastUpdateTargets.length) {
+            return false;
+        }
+
+        var rawValue = getLastUpdateRawFromRows(rows) || String(fallbackRawValue || '').trim();
+        var formatted = formatLastUpdateText(rawValue);
+
+        if (!formatted) {
+            return false;
+        }
+
+        lastUpdateTargets.forEach(function (element) {
+            element.textContent = formatted;
+        });
+        return true;
     }
 
     function hasSingleWordVocation(rawVocation) {
@@ -587,11 +668,38 @@
             });
     }
 
+    function fetchLastUpdateFromCsv() {
+        return fetchCharactersFromCsv()
+            .then(function (rows) {
+                return getLastUpdateRawFromRows(rows) || '';
+            })
+            .catch(function () {
+                return '';
+            });
+    }
+
     function loadCharactersData() {
+        var csvLastUpdatePromise = fetchLastUpdateFromCsv();
+
+        // Set fallback as soon as CSV last update is known
+        csvLastUpdatePromise.then(function (rawFallback) {
+            if (rawFallback) {
+                setLastUpdateText([], rawFallback);
+            }
+        });
+
         return fetchCharactersFromApi()
             .then(function (rows) {
                 allRows = rows;
                 isExpanded = false;
+                var updatedFromApi = setLastUpdateText(rows);
+
+                csvLastUpdatePromise.then(function (rawFallback) {
+                    if (!updatedFromApi && rawFallback) {
+                        setLastUpdateText([], rawFallback);
+                    }
+                });
+
                 console.info('Personagens carregados via API:', rows.length);
                 renderByState();
             })
@@ -601,6 +709,13 @@
                 return fetchCharactersFromCsv().then(function (rows) {
                     allRows = rows;
                     isExpanded = false;
+
+                    csvLastUpdatePromise.then(function (rawFallback) {
+                        if (!setLastUpdateText(rows) && rawFallback) {
+                            setLastUpdateText([], rawFallback);
+                        }
+                    });
+
                     console.info('Personagens carregados via CSV fallback:', rows.length);
                     renderByState();
                 });
