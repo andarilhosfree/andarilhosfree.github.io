@@ -9,6 +9,9 @@
     var worldInput = filterForm ? filterForm.querySelector('input[placeholder="Mundo"]') : null;
     var searchButton = filterForm ? filterForm.querySelector('button.site-button.btn-block') : null;
     var charactersApiUrl = 'https://script.google.com/macros/s/AKfycbyhDUdN2CYmLAeFkzadd1Be3n8jCZEg8HN1LeEqodVVzHO8Y5df014aYpopMO-_oKeT/exec';
+    var uploadApiUrl = charactersApiUrl;
+    var spriteUpdateWebAppUrl = 'https://script.google.com/macros/s/AKfycbx1JeyObkZwAOw-eFksB90Xky4B09BGtj8MlOKdK04ZE0CV76X57-dpBZgezZtKVDgz/exec';
+    var imgbbApiKey = '4bcd2691cf719e87b29a5d28e7077918';
     var fetchTimeoutMs = 12000;
     var csvPath = 'ANDARILHOS FREE ACCOUNT - Página1.csv';
     var initialVisibleCount = 6;
@@ -300,6 +303,119 @@
         });
     }
 
+    function parseJsonResponse(response) {
+        return response.text().then(function (text) {
+            if (!text) {
+                return {};
+            }
+
+            try {
+                return JSON.parse(text);
+            } catch (error) {
+                throw new Error('Resposta inválida do servidor.');
+            }
+        });
+    }
+
+    function uploadToImgBB(imageFile) {
+        if (!imgbbApiKey) {
+            return Promise.reject(new Error('ImgBB API key não configurada.'));
+        }
+
+        var formData = new FormData();
+        formData.append('key', imgbbApiKey);
+        formData.append('image', imageFile);
+
+        return fetchWithTimeout('https://api.imgbb.com/1/upload', {
+            method: 'POST',
+            body: formData
+        }, fetchTimeoutMs)
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('Falha no upload para o ImgBB');
+                }
+
+                return parseJsonResponse(response);
+            })
+            .then(function (data) {
+                if (data && data.success && data.data && data.data.url) {
+                    return data.data.url;
+                }
+
+                var message = (data && data.error && data.error.message)
+                    ? data.error.message
+                    : 'Erro desconhecido';
+                throw new Error('Falha no upload para o ImgBB: ' + message);
+            });
+    }
+
+    function submitSpriteUrlViaTransport(characterName, spriteUrl) {
+        return new Promise(function (resolve, reject) {
+            if (!spriteUpdateWebAppUrl) {
+                reject(new Error('URL do Apps Script (spriteUpdateWebAppUrl) não configurada.'));
+                return;
+            }
+
+            var form = document.getElementById('sprite-upload-transport-form');
+            var nomeInput = document.getElementById('sprite-upload-transport-nome');
+            var spriteUrlInput = document.getElementById('sprite-upload-transport-spriteUrl');
+            var frame = document.getElementById('sprite-upload-transport-frame');
+
+            if (!form || !nomeInput || !spriteUrlInput || !frame) {
+                reject(new Error('Transporte de upload não encontrado na página (form/iframe ocultos).'));
+                return;
+            }
+
+            form.action = spriteUpdateWebAppUrl;
+            nomeInput.value = String(characterName || '').trim();
+            spriteUrlInput.value = String(spriteUrl || '').trim();
+
+            try {
+                form.submit();
+            } catch (error) {
+                reject(new Error('Erro ao enviar para a planilha: ' + (error && error.message ? error.message : String(error))));
+                return;
+            } finally {
+                spriteUrlInput.value = '';
+            }
+
+            resolve({ success: true });
+        });
+    }
+
+    function uploadCharacterSprite(characterName, imageFile) {
+        return new Promise(function (resolve, reject) {
+            if (!characterName || !imageFile) {
+                reject(new Error('Nome do personagem e imagem são obrigatórios'));
+                return;
+            }
+
+            if (!imageFile.type || imageFile.type.indexOf('image/') !== 0) {
+                reject(new Error('Por favor, selecione um arquivo de imagem (PNG, JPG, etc.)'));
+                return;
+            }
+
+            if (imageFile.size > 32 * 1024 * 1024) {
+                reject(new Error('A imagem deve ter no máximo 32MB. Por favor, comprima ou use uma imagem menor.'));
+                return;
+            }
+
+            uploadToImgBB(imageFile)
+                .then(function (imageUrl) {
+                    return submitSpriteUrlViaTransport(characterName, imageUrl)
+                        .then(function () {
+                            return imageUrl;
+                        });
+                })
+                .then(function (imageUrl) {
+                    resolve({ success: true, imageUrl: imageUrl });
+                })
+                .catch(function (error) {
+                    reject(new Error((error && error.message) ? error.message : String(error)));
+                });
+        });
+    }
+
     function normalizeHeaderKey(header) {
         return String(header || '')
             .trim()
@@ -414,6 +530,56 @@
             '    width: 100%;',
             '  }',
             '}',
+            '.job-box-list .character-image-wrapper {',
+            '  display: inline-block;',
+            '}',
+            '.job-box-list .character-image-stage {',
+            '  position: relative;',
+            '  display: inline-block;',
+            '}',
+            '.job-box-list .character-image-edit {',
+            '  position: absolute;',
+            '  top: 6px;',
+            '  right: 6px;',
+            '  z-index: 3;',
+            '  width: 32px;',
+            '  height: 32px;',
+            '  min-width: 0;',
+            '  padding: 0;',
+            '  display: none;',
+            '  align-items: center;',
+            '  justify-content: center;',
+            '  border-radius: 4px;',
+            '}',
+            '.job-box-list .character-image-edit i {',
+            '  font-size: 20px;',
+            '  line-height: 1;',
+            '}',
+            '.job-box-list .character-image-wrapper.is-edit-visible .character-image-edit {',
+            '  display: inline-flex;',
+            '}',
+            '.job-box-list .character-image-pressarea {',
+            '  position: absolute;',
+            '  top: 0;',
+            '  left: 0;',
+            '  right: 0;',
+            '  bottom: 0;',
+            '  z-index: 1;',
+            '  background: transparent;',
+            '  -webkit-touch-callout: none;',
+            '  -webkit-user-select: none;',
+            '  user-select: none;',
+            '  touch-action: none;',
+            '  pointer-events: auto;',
+            '  -webkit-tap-highlight-color: transparent;',
+            '}',
+            '.job-box-list .character-sprite-img {',
+            '  -webkit-user-drag: none;',
+            '  -webkit-user-select: none;',
+            '  user-select: none;',
+            '  -webkit-touch-callout: none;',
+            '  pointer-events: none;',
+            '}',
             ''
         ].join('\n');
 
@@ -426,6 +592,7 @@
 
         var rawName = (character.NOME || '').trim();
         var tibiaProfileUrl = 'https://www.tibia.com/community/?name=' + encodeURIComponent(rawName).replace(/%20/g, '+');
+        var characterNameAttribute = escapeHtml(rawName);
         var nome = escapeHtml(normalizeValue(character.NOME));
         var vocationBadge = getVocationBadge(character['VOCAÇÃO']);
         var mundo = escapeHtml(normalizeValue(character.MUNDO));
@@ -456,13 +623,167 @@
             '</div>' +
             '<div class="job-company-logo" style="display:flex;align-items:center;justify-content:flex-end;">' +
             freeSealDesktopMarkup +
-            '<div style="position:relative;display:inline-block;">' +
-            '<img src="' + spriteSrc + '" alt="" style="max-width:150px;max-height:150px;width:auto;height:auto;display:block;">' +
+            '<div class="character-image-wrapper js-character-image-wrapper" data-character-name="' + characterNameAttribute + '">' +
+            '<div class="character-image-stage">' +
+            '<button type="button" class="site-button button-sm character-image-edit js-character-image-edit" aria-label="Editar imagem" title="Editar imagem">' +
+            '<i class="ti-pencil"></i>' +
+            '</button>' +
+            '<input type="file" class="js-character-image-input" accept="image/*" style="display:none;">' +
+            '<span class="character-image-pressarea js-character-image-pressarea" aria-hidden="true"></span>' +
+            '<img src="' + spriteSrc + '" alt="" class="character-sprite-img js-character-sprite" style="max-width:150px;max-height:150px;width:auto;height:auto;display:block;" draggable="false">' +
             freeSealMobileMarkup +
-                (lastLogin ? '<span class="character-last-login">' + escapeHtml(lastLogin) + '</span>' : '') +
+            '</div>' +
+            (lastLogin ? '<span class="character-last-login">' + escapeHtml(lastLogin) + '</span>' : '') +
             '</div>' +
             '</div>' +
             '</div>';
+    }
+
+    var characterImageHoldDurationMs = 10000;
+
+    function bindCharacterImageUploadUi() {
+        var wrappers = listContainer.querySelectorAll('.js-character-image-wrapper');
+
+        Array.prototype.forEach.call(wrappers, function (wrapper) {
+            var pressArea = wrapper.querySelector('.js-character-image-pressarea');
+            var editButton = wrapper.querySelector('.js-character-image-edit');
+            var fileInput = wrapper.querySelector('.js-character-image-input');
+            var spriteImg = wrapper.querySelector('.js-character-sprite');
+            var pressTarget = pressArea || wrapper;
+            var characterName = String(wrapper.getAttribute('data-character-name') || '').trim();
+
+            if (!pressTarget || !editButton || !fileInput) {
+                return;
+            }
+
+            var holdTimerId = null;
+
+            function clearHoldTimer() {
+                if (holdTimerId === null) {
+                    return;
+                }
+
+                window.clearTimeout(holdTimerId);
+                holdTimerId = null;
+            }
+
+            function startHoldTimer(event) {
+                if (wrapper.classList.contains('is-edit-visible')) {
+                    return;
+                }
+
+                if (event && event.pointerType === 'mouse' && typeof event.button === 'number' && event.button !== 0) {
+                    return;
+                }
+
+                if (event && event.cancelable && (event.pointerType === 'touch' || event.type === 'touchstart')) {
+                    event.preventDefault();
+                }
+
+                clearHoldTimer();
+                holdTimerId = window.setTimeout(function () {
+                    if (!wrapper.isConnected) {
+                        return;
+                    }
+
+                    wrapper.classList.add('is-edit-visible');
+                }, characterImageHoldDurationMs);
+            }
+
+            function cancelHoldTimer() {
+                clearHoldTimer();
+            }
+
+            function preventIosDefault(event) {
+                if (event && event.cancelable) {
+                    event.preventDefault();
+                }
+            }
+
+            if (typeof window.PointerEvent !== 'undefined') {
+                pressTarget.addEventListener('pointerdown', startHoldTimer);
+                pressTarget.addEventListener('pointerup', cancelHoldTimer);
+                pressTarget.addEventListener('pointerleave', cancelHoldTimer);
+                pressTarget.addEventListener('pointercancel', cancelHoldTimer);
+            } else {
+                pressTarget.addEventListener('mousedown', startHoldTimer);
+                pressTarget.addEventListener('mouseup', cancelHoldTimer);
+                pressTarget.addEventListener('mouseleave', cancelHoldTimer);
+                pressTarget.addEventListener('touchstart', startHoldTimer);
+                pressTarget.addEventListener('touchend', cancelHoldTimer);
+                pressTarget.addEventListener('touchcancel', cancelHoldTimer);
+            }
+
+            // iOS Safari: prevent native image preview/callout/zoom on long press.
+            pressTarget.addEventListener('touchstart', preventIosDefault, { passive: false });
+            pressTarget.addEventListener('touchend', preventIosDefault, { passive: false });
+            pressTarget.addEventListener('touchcancel', preventIosDefault, { passive: false });
+            pressTarget.addEventListener('gesturestart', preventIosDefault, { passive: false });
+            pressTarget.addEventListener('gesturechange', preventIosDefault, { passive: false });
+            pressTarget.addEventListener('gestureend', preventIosDefault, { passive: false });
+
+            pressTarget.addEventListener('contextmenu', function (event) {
+                event.preventDefault();
+            });
+
+            pressTarget.addEventListener('dragstart', function (event) {
+                event.preventDefault();
+            });
+
+            editButton.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function () {
+                var file = fileInput.files && fileInput.files[0];
+                fileInput.value = '';
+
+                if (!file) {
+                    return;
+                }
+
+                if (!file.type || file.type.indexOf('image/') !== 0) {
+                    window.alert('Por favor, selecione um arquivo de imagem válido.');
+                    return;
+                }
+
+                if (file.size > 32 * 1024 * 1024) {
+                    window.alert('A imagem deve ter no máximo 32MB. Por favor, comprima ou use uma imagem menor.');
+                    return;
+                }
+
+                if (!characterName) {
+                    window.alert('Não foi possível identificar o nome do personagem.');
+                    return;
+                }
+
+                if (spriteImg) {
+                    spriteImg.style.opacity = '0.5';
+                }
+
+                uploadCharacterSprite(characterName, file)
+                    .then(function (result) {
+                        if (spriteImg && result && result.imageUrl) {
+                            spriteImg.src = result.imageUrl + '?t=' + Date.now();
+                        }
+
+                        if (spriteImg) {
+                            spriteImg.style.opacity = '1';
+                        }
+
+                        wrapper.classList.remove('is-edit-visible');
+                        window.alert('Sprite enviado para atualização! (A confirmação pode demorar alguns segundos)');
+                    })
+                    .catch(function (error) {
+                        if (spriteImg) {
+                            spriteImg.style.opacity = '1';
+                        }
+                        window.alert('Erro: ' + (error && error.message ? error.message : String(error)));
+                    });
+            });
+        });
     }
 
     function csvToObjects(csvText) {
@@ -503,6 +824,7 @@
         });
 
         listContainer.innerHTML = cards.join('');
+        bindCharacterImageUploadUi();
     }
 
     function getCurrentVocationValue() {

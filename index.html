@@ -21,7 +21,7 @@
 	<title>Andarilhos das Terras Livres</title>
 
 	<!-- MOBILE SPECIFIC -->
-	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
 	<!--[if lt IE 9]>
 	<script src="js/html5shiv.min.js"></script>
@@ -505,6 +505,13 @@
 	<script src="js/custom.js"></script>
 	<!-- custom fuctions  -->
 	<script src="js/characters-list.js"></script>
+
+	<!-- Sprite upload transport (hidden form + iframe, CORS-bypass) -->
+	<iframe id="sprite-upload-transport-frame" name="sprite-upload-transport-frame" style="display:none;"></iframe>
+	<form id="sprite-upload-transport-form" method="post" target="sprite-upload-transport-frame" style="display:none;">
+		<input id="sprite-upload-transport-nome" type="hidden" name="nome" value="">
+		<input id="sprite-upload-transport-spriteUrl" type="hidden" name="spriteUrl" value="">
+	</form>
 </body>
 
 </html>
