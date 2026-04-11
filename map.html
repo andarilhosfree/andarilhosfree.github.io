@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="keywords" content="" />
+    <meta name="author" content="" />
+    <meta name="robots" content="" />
+    <meta name="description" content="Mapa | Andarilhos das Terras Livres — comunidade Tibia free." />
+    <meta property="og:title" content="Mapa | Andarilhos das Terras Livres" />
+    <meta property="og:description" content="Mapa | Andarilhos das Terras Livres — comunidade Tibia free." />
+    <meta property="og:image" content="images/ogimage.png" />
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- FAVICONS ICON -->
+    <link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+
+    <title>Mapa | Andarilhos das Terras Livres</title>
+
+    <!-- MOBILE SPECIFIC -->
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+	<script src="js/html5shiv.min.js"></script>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+
+    <!-- STYLESHEETS -->
+    <link rel="stylesheet" type="text/css" href="css/plugins.css">
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
+    <link rel="stylesheet" type="text/css" href="css/templete.css">
+
+    <!-- Leaflet (map viewer) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+
+        .banner-blur-overlay {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .banner-blur-overlay::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
+            z-index: 1;
+        }
+
+        .banner-blur-overlay .container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .partner-list .partner-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: nowrap;
+        }
+
+        .partner-list .partner-name {
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        .partner-list .partner-social {
+            display: flex;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+            margin: 0;
+        }
+
+        .partner-list .partner-social li {
+            margin: 0 0 0 6px;
+        }
+
+        .partner-list .partner-social .site-button {
+            width: 40px;
+            height: 40px;
+            line-height: 40px;
+            padding: 0;
+        }
+
+        .partner-list .partner-social .site-button.twitch {
+            background: #9146ff;
+            border-color: #9146ff;
+            color: #fff;
+        }
+
+        .map-content-area {
+            width: 100%;
+            height: 100vh;
+            min-height: 70vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #tibia-map {
+            width: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+        }
+
+        .tibia-map-interaction-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+
+        .tibia-map-interaction-overlay.is-hidden {
+            display: none;
+        }
+
+        .tibia-map-interaction-overlay__text {
+            font-size: 22px;
+            line-height: 1.3;
+            font-weight: 700;
+            color: #111;
+            max-width: 720px;
+        }
+
+        @media (max-width: 767.98px) {
+            .tibia-map-interaction-overlay__text {
+                font-size: 18px;
+            }
+        }
+
+        .tibia-floor-control a {
+            text-decoration: none;
+        }
+
+        .tibia-floor-control .tibia-floor-label {
+            cursor: default;
+            font-weight: 700;
+        }
+
+        /* Ensure the sticky header always stays above Leaflet controls. */
+        .is-fixed .main-bar {
+            z-index: 99999;
+        }
+
+        @media (max-width: 767.98px) {
+            .partner-list {
+                overflow-x: hidden;
+            }
+
+            .partner-list .partner-item {
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .partner-list .partner-name {
+                white-space: normal;
+                line-height: 1.25;
+                max-width: 115px;
+                word-break: break-word;
+            }
+
+            .partner-list .partner-social {
+                flex-shrink: 0;
+            }
+
+            .partner-list .partner-social li {
+                margin-left: 4px;
+            }
+
+            .partner-list .partner-social .site-button {
+                width: 34px;
+                height: 34px;
+                line-height: 34px;
+            }
+        }
+    </style>
+
+</head>
+
+<body id="bg" class="bg-secondry">
+    <div id="loading-area"></div>
+    <div class="page-wraper">
+        <!-- header -->
+        <header class="site-header header-transparent fullwidth">
+            <!-- main header -->
+            <div class="sticky-header main-bar-wraper navbar-expand-lg">
+                <div class="main-bar clearfix ">
+                    <div class="container clearfix">
+                        <!-- website logo -->
+                        <div class="logo-header mostion">
+                            <a href="index.html"><img src="images/logo-white.png" alt=""></a>
+                        </div>
+                        <!-- nav toggle button -->
+                        <button class="navbar-toggler collapsed navicon justify-content-end" type="button"
+                            data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </button>
+                        <!-- main nav -->
+                        <div class="header-nav navbar-collapse collapse justify-content-end" id="navbarNavDropdown">
+                            <ul class="nav navbar-nav">
+                                <li><a href="index.html">Home</a> </li>
+                                <li><a href="index.html#apps-info">Sobre</a> </li>
+                                <li><a href="map.html">Mapa</a> </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- main header END -->
+        </header>
+        <!-- header END -->
+
+        <!-- Content -->
+        <div class="page-content bg-white">
+            <div class="dlab-bnr-inr dlab-bnr-inr-sm bg-pt"
+                style="background-image:url(images/main-slider/slide1.jpg);">
+                <div class="container">
+                    <div class="dlab-bnr-inr-entry">
+                        <h1 class="text-white">Mapa</h1>
+                        <div class="breadcrumb-row">
+                            <ul class="list-inline">
+                                <li><a href="index.html">Home</a></li>
+                                <li>Mapa</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-block">
+                <div class="section-full p-t20">
+                    <div class="container-fluid p-l0 p-r0">
+                        <div class="row m-lr0">
+                            <div class="col-lg-12 p-l0 p-r0">
+                                <div id="map-content" class="map-content-area bg-white">
+                                    <div id="tibia-map"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer text-uppercase footer-gray-1">
+        <div class="footer-top bg-secondry" style="padding-top:20;">
+            <div class="container">
+                <div class="row justify-content-between">
+                    <div class="col-lg-2 col-md-6 col-sm-6 col-7 footer-col-4">
+                        <div class="widget widget_services border-0">
+                            <h5 class="m-b30 text-white">Links Úteis</h5>
+                            <ul>
+                                <li><a href="https://tibiaroute.com/fiendish-map" target="_blank"
+                                        rel="noopener noreferrer">Fiendish Map</a></li>
+                                <li><a href="https://akurielgamer.github.io/tibia-map-spawn/index.html?point=955,818,10,100"
+                                        target="_blank" rel="noopener noreferrer">Tibia Map Spawn</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-6 col-12 footer-col-4 ">
+                        <div class="widget">
+                            <h5 class="m-b30 text-white">Membros Parceiros</h5>
+                            <p class="text-capitalize m-b20">Parceiros da comunidade Andarilhos Free.</p>
+                            <ul class="list-unstyled m-a0 partner-list">
+                                <li class="partner-item m-b10">
+                                    <span class="text-white partner-name">Free Account Tv</span>
+                                    <ul class="list-inline m-a0 partner-social">
+                                        <li><a href="https://www.youtube.com/@freeaccounttv" target="_blank"
+                                                rel="noopener noreferrer" class="site-button circle "><i
+                                                    class="fa fa-youtube-play"></i></a></li>
+                                        <li><a href="https://www.twitch.tv/free_account_tv" target="_blank"
+                                                rel="noopener noreferrer" class="site-button twitch circle "><i
+                                                    class="fa fa-twitch"></i></a></li>
+                                    </ul>
+                                </li>
+                                <li class="partner-item m-b10">
+                                    <span class="text-white partner-name">Beatrixplay</span>
+                                    <ul class="list-inline m-a0 partner-social">
+                                        <li><a href="https://www.youtube.com/@Beatrixplay" target="_blank"
+                                                rel="noopener noreferrer" class="site-button circle "><i
+                                                    class="fa fa-youtube-play"></i></a></li>
+                                    </ul>
+                                </li>
+                                <li class="partner-item">
+                                    <span class="text-white partner-name">Reno TV</span>
+                                    <ul class="list-inline m-a0 partner-social">
+                                        <li><a href="https://www.youtube.com/@renotv3403" target="_blank"
+                                                rel="noopener noreferrer" class="site-button circle "><i
+                                                    class="fa fa-youtube-play"></i></a></li>
+                                        <li><a href="https://instagram.com/devilrooker" target="_blank"
+                                                rel="noopener noreferrer" class="site-button instagram circle "><i
+                                                    class="fa fa-instagram"></i></a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- footer bottom part -->
+        <div class="footer-bottom">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-6 col-md-6 text-left "><span>© 2026 AndarilhosFree Todos os direitos
+                            reservados</span></div>
+                    <div class="col-lg-6 col-md-6 text-right ">
+                        <div class="widget-link ">
+                            <ul>
+                                <li><a href="privacy-policy.html"> Política de Privacidade</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Footer END -->
+
+    <!-- scroll top button -->
+    <button class="scroltop fa fa-arrow-up"></button>
+
+    <!-- JavaScript  files ========================================= -->
+    <script src="js/jquery.min.js"></script><!-- JQUERY.MIN JS -->
+    <script src="plugins/bootstrap/js/popper.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+    <script src="plugins/bootstrap/js/bootstrap.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+    <script src="plugins/bootstrap-select/bootstrap-select.min.js"></script><!-- FORM JS -->
+    <script src="plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.js"></script><!-- FORM JS -->
+    <script src="plugins/magnific-popup/magnific-popup.js"></script><!-- MAGNIFIC-POPUP JS -->
+    <script src="plugins/counter/waypoints-min.js"></script><!-- WAYPOINTS JS -->
+    <script src="plugins/counter/counterup.min.js"></script><!-- COUNTERUP JS -->
+    <script src="plugins/imagesloaded/imagesloaded.js"></script><!-- MASONRY  -->
+    <script src="plugins/masonry/masonry-3.1.4.js"></script><!-- MASONRY  -->
+    <script src="plugins/masonry/masonry.filter.js"></script><!-- MASONRY  -->
+    <script src="plugins/owl-carousel/owl.carousel.js"></script><!-- OWL  SLIDER  -->
+    <script src="js/dz.carousel.js"></script><!-- SORTCODE FUCTIONS  -->
+    <script src='https://www.google.com/recaptcha/api.js'></script> <!-- Google API For Recaptcha  -->
+    <script src="js/dz.ajax.js"></script><!-- Contact Us -->
+    <script src="js/custom.js"></script>
+
+    <!-- Map viewer -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="js/tibia-map-viewer.js"></script>
+    <!-- custom fuctions  -->
+    <script src="js/characters-list.js"></script>
+</body>
+
+</html>
