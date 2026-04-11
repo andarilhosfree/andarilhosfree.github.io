@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="keywords" content="" />
+	<meta name="author" content="" />
+	<meta name="robots" content="" />
+	<meta name="description"
+		content="Política de privacidade do site Andarilhos das Terras Livres — comunidade Tibia free." />
+	<meta property="og:title" content="Política de Privacidade | Andarilhos das Terras Livres" />
+	<meta property="og:description"
+		content="Política de privacidade do site Andarilhos das Terras Livres — comunidade Tibia free." />
+	<meta property="og:image" content="images/ogimage.png" />
+	<meta name="format-detection" content="telephone=no">
+
+	<!-- FAVICONS ICON -->
+	<link rel="icon" href="images/favicon.ico" type="image/x-icon" />
+	<link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
+
+	<title>Política de Privacidade | Andarilhos das Terras Livres</title>
+
+	<!-- MOBILE SPECIFIC -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+
+	<!--[if lt IE 9]>
+	<script src="js/html5shiv.min.js"></script>
+	<script src="js/respond.min.js"></script>
+	<![endif]-->
+
+	<!-- STYLESHEETS -->
+	<link rel="stylesheet" type="text/css" href="css/plugins.css">
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
+	<link rel="stylesheet" type="text/css" href="css/templete.css">
+	<style>
+		html {
+			scroll-behavior: smooth;
+		}
+
+		.banner-blur-overlay {
+			position: relative;
+			overflow: hidden;
+		}
+
+		.banner-blur-overlay::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			background: rgba(0, 0, 0, 0.1);
+			backdrop-filter: blur(2px);
+			-webkit-backdrop-filter: blur(2px);
+			z-index: 1;
+		}
+
+		.banner-blur-overlay .container {
+			position: relative;
+			z-index: 2;
+		}
+
+		.partner-list .partner-item {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			gap: 10px;
+			flex-wrap: nowrap;
+		}
+
+		.partner-list .partner-name {
+			white-space: nowrap;
+			font-size: 14px;
+		}
+
+		.partner-list .partner-social {
+			display: flex;
+			flex-wrap: nowrap;
+			white-space: nowrap;
+			margin: 0;
+		}
+
+		.partner-list .partner-social li {
+			margin: 0 0 0 6px;
+		}
+
+		.partner-list .partner-social .site-button {
+			width: 40px;
+			height: 40px;
+			line-height: 40px;
+			padding: 0;
+		}
+
+		.partner-list .partner-social .site-button.twitch {
+			background: #9146ff;
+			border-color: #9146ff;
+			color: #fff;
+		}
+
+		.other-job-list .title-head {
+			display: flex;
+			align-items: center;
+			gap: 12px;
+			flex-wrap: wrap;
+		}
+
+		.other-job-list .title-head .site-button {
+			margin: 0;
+			vertical-align: middle;
+		}
+
+		.other-job-list .title-head .vocation-druid {
+			background: #2eaf63;
+			border-color: #2eaf63;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-monk {
+			background: #7a4bd1;
+			border-color: #7a4bd1;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-paladin {
+			background: #f3c43f;
+			border-color: #f3c43f;
+			color: #222;
+		}
+
+		.other-job-list .title-head .vocation-sorcerer {
+			background: #d74c4c;
+			border-color: #d74c4c;
+			color: #fff;
+		}
+
+		.other-job-list .title-head .vocation-knight {
+			background: #4d4d4d;
+			border-color: #4d4d4d;
+			color: #fff;
+		}
+
+		.character-filter-tabs {
+			text-align: left;
+		}
+
+		.character-filter-tabs .nav-tabs {
+			justify-content: flex-start;
+		}
+
+		.character-filter-tabs .tab-content {
+			padding: 18px 24px 14px;
+			border: 1px solid #d9d9d9;
+			border-radius: 0 12px 12px 12px;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10 {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div {
+			flex: 0 0 26% !important;
+			max-width: 26% !important;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
+			flex: 0 0 20.8% !important;
+			max-width: 20.8% !important;
+		}
+
+		.character-filter-tabs .tab-pane input.form-control,
+		.character-filter-tabs .tab-pane select,
+		.character-filter-tabs .tab-pane .site-button.btn-block {
+			width: 100%;
+			max-width: 100%;
+			margin: 0 auto;
+		}
+
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow input.form-control,
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow select,
+		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow .bootstrap-select {
+			width: 80% !important;
+			max-width: 80% !important;
+			margin: 0 auto !important;
+		}
+
+		.character-filter-tabs .site-button.btn-block {
+			height: 48px;
+			line-height: 48px;
+			padding: 0 20px;
+			border: 1px solid #d9d9d9 !important;
+			border-radius: 8px;
+			box-shadow: none;
+		}
+
+		.tab-content.bg-white {
+			border-radius: 0px 10px 10px 10px;
+			padding: 0px 12px;
+		}
+
+		@media (max-width: 767.98px) {
+			.page-content {
+				margin-bottom: 0 !important;
+				padding-bottom: 0 !important;
+			}
+
+			.dlab-bnr-inr {
+				margin-bottom: 0 !important;
+				padding-bottom: 0 !important;
+			}
+
+			.section-full.bg-gray.content-inner.bg-img-fix {
+				margin-top: 0 !important;
+			}
+
+			.partner-list {
+				overflow-x: hidden;
+			}
+
+			.partner-list .partner-item {
+				align-items: flex-start;
+				gap: 8px;
+			}
+
+			.partner-list .partner-name {
+				white-space: normal;
+				line-height: 1.25;
+				max-width: 115px;
+				word-break: break-word;
+			}
+
+			.partner-list .partner-social {
+				flex-shrink: 0;
+			}
+
+			.partner-list .partner-social li {
+				margin-left: 4px;
+			}
+
+			.partner-list .partner-social .site-button {
+				width: 34px;
+				height: 34px;
+				line-height: 34px;
+			}
+
+			.character-filter-tabs .tab-pane .row.sp10>div {
+				flex: 0 0 100%;
+				max-width: 100%;
+			}
+
+			.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
+				flex: 0 0 100%;
+				max-width: 100%;
+			}
+
+			.character-filter-tabs .tab-pane input.form-control,
+			.character-filter-tabs .tab-pane select,
+			.character-filter-tabs .tab-pane .site-button.btn-block {
+				max-width: 100%;
+			}
+		}
+	</style>
+
+</head>
+
+<body id="bg" class="bg-secondry">
+	<div id="loading-area"></div>
+	<div class="page-wraper">
+		<!-- header -->
+		<header class="site-header header-transparent fullwidth">
+			<!-- main header -->
+			<div class="sticky-header main-bar-wraper navbar-expand-lg">
+				<div class="main-bar clearfix ">
+					<div class="container clearfix">
+						<!-- website logo -->
+						<div class="logo-header mostion">
+							<a href="index.html"><img src="images/logo-white.png" alt=""></a>
+						</div>
+						<!-- nav toggle button -->
+						<!-- nav toggle button -->
+						<button class="navbar-toggler collapsed navicon justify-content-end" type="button"
+							data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
+							aria-expanded="false" aria-label="Toggle navigation">
+							<span></span>
+							<span></span>
+							<span></span>
+						</button>
+						<!-- extra nav -->
+						<!-- main nav -->
+						<div class="header-nav navbar-collapse collapse justify-content-end" id="navbarNavDropdown">
+							<ul class="nav navbar-nav">
+								<li><a href="index.html">Home</a> </li>
+								<li><a href="index.html#apps-info">Sobre</a> </li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- main header END -->
+		</header>
+		<!-- header END -->
+		<!-- Content -->
+		<div class="page-content bg-white">
+			<div class="dlab-bnr-inr dlab-bnr-inr-sm bg-pt" style="background-image:url(images/main-slider/slide1.jpg);">
+				<div class="container">
+					<div class="dlab-bnr-inr-entry">
+						<h1 class="text-white">Política de Privacidade</h1>
+						<div class="breadcrumb-row">
+							<ul class="list-inline">
+								<li><a href="index.html">Home</a></li>
+								<li>Política de Privacidade</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="content-block">
+				<div class="section-full p-t80">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-12 m-b30 text-left">
+								<h4 class="font-weight-700">Política de Privacidade – Andarilhos das Terras Livres</h4>
+								<p class="font-18">O Andarilhos das Terras Livres acredita que a privacidade e a transparência são fundamentais. Por isso, disponibilizamos este documento para esclarecer como as informações são coletadas, utilizadas e disponibilizadas aos usuários.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Objetivo desta política</h4>
+								<p class="font-18">Esta política tem como objetivo informar de forma clara e transparente como os dados fornecidos pelos usuários são tratados dentro do site.</p>
+								<p class="font-18">Ao fornecer seus dados, o usuário declara estar ciente e de acordo com as condições aqui descritas.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Quais dados são coletados</h4>
+								<p class="font-18">Os únicos dados pessoais que podem ser informados pelos usuários são:</p>
+								<ul class="list-circle primary m-a0">
+									<li>Nome</li>
+									<li>Localização</li>
+									<li>Telefone</li>
+								</ul>
+								<p class="font-18 m-t15">O fornecimento dessas informações é totalmente opcional.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Forma de coleta e armazenamento</h4>
+								<p class="font-18">Os dados são inseridos voluntariamente pelos usuários em uma planilha aberta, acessível publicamente.</p>
+								<p class="font-18">Essa planilha é:</p>
+								<ul class="list-circle primary m-a0">
+									<li>Gerenciada por serviços do Google</li>
+									<li>De acesso livre para qualquer pessoa com o link</li>
+									<li>Não possui controle restrito por parte do site</li>
+								</ul>
+								<p class="font-18 m-t15">O Andarilhos das Terras Livres não realiza armazenamento próprio desses dados fora da planilha.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Uso e compartilhamento dos dados</h4>
+								<p class="font-18">Os dados informados:</p>
+								<ul class="list-circle primary m-a0">
+									<li>São visíveis publicamente na planilha</li>
+									<li>Podem ser acessados por qualquer pessoa</li>
+									<li>Não são controlados, moderados ou restringidos pelo site</li>
+								</ul>
+								<p class="font-18 m-t15">Dessa forma, o usuário está ciente de que, ao inserir seus dados:</p>
+								<ul class="list-circle primary m-a0 m-t10">
+									<li>Está voluntariamente tornando-os públicos</li>
+									<li>Assume os riscos relacionados à exposição dessas informações</li>
+								</ul>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Exclusão e controle dos dados (LGPD)</h4>
+								<p class="font-18">Em conformidade com a Lei Geral de Proteção de Dados (LGPD), o usuário pode, a qualquer momento:</p>
+								<ul class="list-circle primary m-a0">
+									<li>Excluir seus próprios dados diretamente da planilha</li>
+									<li>Editar ou corrigir as informações inseridas</li>
+									<li>Optar por não fornecer ou remover totalmente seus dados</li>
+								</ul>
+								<p class="font-18 m-t15">A gestão, edição e exclusão dos dados são de responsabilidade do próprio usuário que realizou o cadastro.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Responsabilidade sobre os dados</h4>
+								<p class="font-18">O Andarilhos das Terras Livres:</p>
+								<p class="font-18">Não se responsabiliza pelo armazenamento, uso ou divulgação dos dados pessoais, uma vez que:</p>
+								<ul class="list-circle primary m-a0">
+									<li>A planilha é pública</li>
+									<li>O acesso é irrestrito</li>
+									<li>O preenchimento é opcional</li>
+								</ul>
+								<p class="font-18 m-t15">A responsabilidade pelo fornecimento, manutenção e remoção das informações é exclusivamente do usuário.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12 m-b30">
+								<h4 class="font-weight-700">Links externos</h4>
+								<p class="font-18">O site pode conter links para serviços de terceiros, incluindo:</p>
+								<ul class="list-circle primary m-a0">
+									<li>Plataforma do Google (planilha)</li>
+									<li>Grupo externo no WhatsApp</li>
+								</ul>
+								<p class="font-18 m-t15">Ao acessar esses links, o usuário estará sujeito às políticas de privacidade próprias dessas plataformas.</p>
+								<p class="font-18">O Andarilhos das Terras Livres não se responsabiliza pelas práticas, coleta ou uso de dados realizados por terceiros, incluindo o WhatsApp ou qualquer outro serviço externo.</p>
+								<div class="dlab-divider bg-gray-dark"></div>
+							</div>
+							<div class="col-lg-12">
+								<h4 class="font-weight-700">Alterações nesta política</h4>
+								<p class="font-18">Esta Política de Privacidade pode ser atualizada a qualquer momento para refletir mudanças no funcionamento do site ou em exigências legais.</p>
+								<p class="font-18">Recomendamos que o usuário revise este documento periodicamente.</p>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="section-full p-tb80">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="text-center max-w600 m-auto ">
+									<div class="m-b20"><i class="fa fa-quote-left font-45 text-primary"></i></div>
+									<h4 class="text-uppercase font-weight-700 font-30 m-b20">Quer conversar com a gente sobre tíbia?</h4>
+									<a href="https://chat.whatsapp.com/JMGZ9tORv6c65KOQAD0xAQ" target="_blank"
+										rel="noopener noreferrer"
+										class="site-button radius-xl outline outline-2"><span class="p-lr10"><i
+												class="fa fa-whatsapp m-r5"></i>Grupo do WhatsApp</span></a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- Footer -->
+	<footer class="site-footer text-uppercase footer-gray-1">
+		<div class="footer-top bg-secondry" style="padding-top:20;">
+			<div class="container">
+				<div class="row justify-content-between">
+					<div class="col-lg-2 col-md-6 col-sm-6 col-7 footer-col-4">
+						<div class="widget widget_services border-0">
+							<h5 class="m-b30 text-white">Links Úteis</h5>
+							<ul>
+								<li><a href="https://tibiaroute.com/fiendish-map" target="_blank"
+										rel="noopener noreferrer">Fiendish Map</a></li>
+								<li><a href="https://akurielgamer.github.io/tibia-map-spawn/index.html?point=955,818,10,100"
+										target="_blank" rel="noopener noreferrer">Tibia Map Spawn</a></li>
+							</ul>
+						</div>
+					</div>
+					<div class="col-lg-4 col-md-6 col-sm-6 col-12 footer-col-4 ">
+						<div class="widget">
+							<h5 class="m-b30 text-white">Membros Parceiros</h5>
+							<p class="text-capitalize m-b20">Parceiros da comunidade Andarilhos Free.</p>
+							<ul class="list-unstyled m-a0 partner-list">
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Free Account Tv</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="https://www.youtube.com/@freeaccounttv" target="_blank"
+												rel="noopener noreferrer" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+										<li><a href="https://www.twitch.tv/free_account_tv" target="_blank"
+												rel="noopener noreferrer" class="site-button twitch circle "><i
+													class="fa fa-twitch"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item m-b10">
+									<span class="text-white partner-name">Beatrixplay</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="https://www.youtube.com/@Beatrixplay" target="_blank"
+												rel="noopener noreferrer" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+									</ul>
+								</li>
+								<li class="partner-item">
+									<span class="text-white partner-name">Reno TV</span>
+									<ul class="list-inline m-a0 partner-social">
+										<li><a href="https://www.youtube.com/@renotv3403" target="_blank"
+												rel="noopener noreferrer" class="site-button circle "><i
+													class="fa fa-youtube-play"></i></a></li>
+										<li><a href="https://instagram.com/devilrooker" target="_blank"
+												rel="noopener noreferrer" class="site-button instagram circle "><i
+													class="fa fa-instagram"></i></a></li>
+									</ul>
+								</li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- footer bottom part -->
+		<div class="footer-bottom">
+			<div class="container">
+				<div class="row">
+					<div class="col-lg-6 col-md-6 text-left "><span>© 2026 AndarilhosFree Todos os direitos
+							reservados</span> </div>
+					<div class="col-lg-6 col-md-6 text-right ">
+						<div class="widget-link ">
+							<ul>
+								<li><a href="privacy-policy.html"> Política de Privacidade</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</footer>
+	<!-- Footer END -->
+	<!-- scroll top button -->
+	<button class="scroltop fa fa-arrow-up"></button>
+	<!-- JavaScript  files ========================================= -->
+	<script src="js/jquery.min.js"></script><!-- JQUERY.MIN JS -->
+	<script src="plugins/bootstrap/js/popper.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+	<script src="plugins/bootstrap/js/bootstrap.min.js"></script><!-- BOOTSTRAP.MIN JS -->
+	<script src="plugins/bootstrap-select/bootstrap-select.min.js"></script><!-- FORM JS -->
+	<script src="plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.js"></script><!-- FORM JS -->
+	<script src="plugins/magnific-popup/magnific-popup.js"></script><!-- MAGNIFIC-POPUP JS -->
+	<script src="plugins/counter/waypoints-min.js"></script><!-- WAYPOINTS JS -->
+	<script src="plugins/counter/counterup.min.js"></script><!-- COUNTERUP JS -->
+	<script src="plugins/imagesloaded/imagesloaded.js"></script><!-- MASONRY  -->
+	<script src="plugins/masonry/masonry-3.1.4.js"></script><!-- MASONRY  -->
+	<script src="plugins/masonry/masonry.filter.js"></script><!-- MASONRY  -->
+	<script src="plugins/owl-carousel/owl.carousel.js"></script><!-- OWL  SLIDER  -->
+	<script src="js/dz.carousel.js"></script><!-- SORTCODE FUCTIONS  -->
+	<script src='https://www.google.com/recaptcha/api.js'></script> <!-- Google API For Recaptcha  -->
+	<script src="js/dz.ajax.js"></script><!-- Contact Us -->
+	<script src="js/custom.js"></script>
+	<!-- custom fuctions  -->
+	<script src="js/characters-list.js"></script>
+</body>
+
+</html>
