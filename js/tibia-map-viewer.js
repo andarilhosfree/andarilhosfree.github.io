@@ -5,6 +5,7 @@
 
     var CONFIG = {
         boundsUrl: 'map-data/tibia-map/bounds.json',
+        creatureSpawnsUrl: 'map-data/tibia-map/creature-spawns.json',
         floorImageUrl: function (floorId) {
             return 'images/tibia-map/floor-' + floorId + '-map.png';
         },
@@ -16,9 +17,10 @@
         defaultZ: 7,
         minZ: 0,
         maxZ: 15,
-        defaultZoom: 0,
+        defaultZoom: 1,
         minZoom: -2,
-        maxZoom: 3
+        // Cap zoom-in so the floor PNG is not blown up into hard pixel blocks.
+        maxZoom: 2
     };
 
     function floorIdFromZ(z) {
@@ -94,16 +96,19 @@
     }
 
     function toWorldFromPixel(bounds, pixelX, pixelY) {
+        // Leaflet CRS.Simple + imageOverlay([[0,0],[height,width]]) maps lat=0 to the
+        // bottom of the PNG and lat=height to the top. Tibia world Y increases south
+        // (down the PNG), so we invert Y when converting.
         return {
             worldX: pixelX + bounds.xMin,
-            worldY: pixelY + bounds.yMin
+            worldY: bounds.yMin + (bounds.height - pixelY)
         };
     }
 
     function toPixelFromWorld(bounds, worldX, worldY) {
         return {
             x: worldX - bounds.xMin,
-            y: worldY - bounds.yMin
+            y: bounds.height - (worldY - bounds.yMin)
         };
     }
 
@@ -159,26 +164,654 @@
                     maxZoom: CONFIG.maxZoom,
                     zoomControl: true,
                     attributionControl: false,
-                    scrollWheelZoom: false
+                    scrollWheelZoom: false,
+                    // Keep zoom on the map only; avoid odd bound bounce while zooming.
+                    maxBoundsViscosity: 1.0
                 });
 
-                map.fitBounds(imageBounds);
-                map.setMaxBounds(imageBounds);
+                var imageLatLngBounds = window.L.latLngBounds(imageBounds);
+                // Slight pad so +/- zoom does not clamp so hard that the view "jumps"
+                // and covers/hides the control UI.
+                map.setMaxBounds(imageLatLngBounds.pad(0.08));
 
                 var state = {
                     bounds: bounds,
                     imageBounds: imageBounds,
                     map: map,
                     overlay: null,
+                    floorOverlays: {},
+                    floorsPreloaded: false,
                     marker: null,
                     z: CONFIG.defaultZ,
                     hasDeepLink: false
                 };
 
+                var creatureUi = {
+                    panelEl: document.getElementById('tibia-creature-panel'),
+                    inputEl: document.getElementById('tibia-creature-input'),
+                    suggestionsEl: document.getElementById('tibia-creature-suggestions'),
+                    selectedEl: document.getElementById('tibia-creature-selected'),
+                    navEl: document.getElementById('tibia-creature-nav'),
+                    navPrevEl: document.getElementById('tibia-creature-nav-prev'),
+                    navNextEl: document.getElementById('tibia-creature-nav-next'),
+                    navGifEl: document.getElementById('tibia-creature-nav-gif'),
+                    navNameEl: document.getElementById('tibia-creature-nav-name'),
+                    navInfoEl: document.getElementById('tibia-creature-nav-info')
+                };
+
+                var creatureState = {
+                    data: null,
+                    selectedKeys: [],
+                    nameByKey: {},
+                    sizeByKey: {},
+                    suggestionNames: [],
+                    activeSuggestionIndex: -1,
+                    activeKey: null,
+                    navStacks: [],
+                    navIndex: 0,
+                    layer: window.L.layerGroup().addTo(map)
+                };
+
+                var CREATURE_SUGGESTION_LIMIT = 10;
+                var CREATURE_ICON_TARGET_HEIGHT = 48;
+                // Larger cell ≈ denser stacks like the reference (~36x at OF).
+                var CREATURE_NAV_CELL_SIZE = 192;
+                // Push sprites further down so they sit on the tile (smaller iconAnchor.y).
+                var CREATURE_ICON_ANCHOR_NUDGE_Y = 36;
+
+                function normalizeCreatureName(name) {
+                    return String(name || '').trim().toLowerCase();
+                }
+
+                function escapeRegExp(value) {
+                    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                }
+
+                function creatureGifUrlForKey(key) {
+                    return 'images/monster_images/' + encodeURIComponent(String(key) + '.gif');
+                }
+
+                function cellSizeForZoom(zoom) {
+                    var z = Number(zoom);
+                    if (!isFinite(z)) z = CONFIG.defaultZoom;
+                    // Min zoom must merge aggressively (reference stacks ~28–36).
+                    if (z <= -1) return 192;
+                    if (z < 1) return 96;
+                    if (z < 2) return 32;
+                    return 1;
+                }
+
+                function buildClusters(points, cellSize, floorFilter) {
+                    var cell = Math.max(1, Number(cellSize) || 1);
+                    var buckets = {};
+
+                    (points || []).forEach(function (p) {
+                        if (!p || p.length < 3) return;
+                        var x = Number(p[0]);
+                        var y = Number(p[1]);
+                        var z = Number(p[2]);
+                        if (!isFinite(x) || !isFinite(y) || !isFinite(z)) return;
+                        if (floorFilter != null && z !== floorFilter) return;
+
+                        var bx = Math.floor(x / cell);
+                        var by = Math.floor(y / cell);
+                        var key = bx + ':' + by + ':' + z;
+                        if (!buckets[key]) {
+                            buckets[key] = {
+                                sumX: 0,
+                                sumY: 0,
+                                z: z,
+                                count: 0
+                            };
+                        }
+                        buckets[key].sumX += x;
+                        buckets[key].sumY += y;
+                        buckets[key].count += 1;
+                    });
+
+                    return Object.keys(buckets).map(function (k) {
+                        var b = buckets[k];
+                        return {
+                            x: Math.round(b.sumX / b.count),
+                            y: Math.round(b.sumY / b.count),
+                            z: b.z,
+                            count: b.count
+                        };
+                    });
+                }
+
+                function buildNavStacks(creatureKey) {
+                    if (!creatureState.data || !creatureState.data.spawns) return [];
+                    var points = creatureState.data.spawns[creatureKey];
+                    if (!Array.isArray(points) || !points.length) return [];
+
+                    var stacks = buildClusters(points, CREATURE_NAV_CELL_SIZE, null);
+                    stacks.sort(function (a, b) {
+                        if (b.count !== a.count) return b.count - a.count;
+                        if (a.z !== b.z) return a.z - b.z;
+                        if (a.x !== b.x) return a.x - b.x;
+                        return a.y - b.y;
+                    });
+                    return stacks;
+                }
+
+                function rankCreatureMatch(name, query) {
+                    var n = normalizeCreatureName(name);
+                    var q = normalizeCreatureName(query);
+                    if (!q) return Number.POSITIVE_INFINITY;
+                    if (n === q) return 0;
+                    if (n.indexOf(q) === 0) return 1;
+
+                    var wordRe = new RegExp('(?:^|[\\s\\-\'_])' + escapeRegExp(q));
+                    if (wordRe.test(n)) return 2;
+
+                    var idx = n.indexOf(q);
+                    if (idx >= 0) return 10 + idx;
+                    return Number.POSITIVE_INFINITY;
+                }
+
+                function filterCreatureSuggestions(query) {
+                    var q = normalizeCreatureName(query);
+                    if (!q || !creatureState.data || !Array.isArray(creatureState.data.creatures)) {
+                        return [];
+                    }
+
+                    var ranked = [];
+                    creatureState.data.creatures.forEach(function (name) {
+                        var score = rankCreatureMatch(name, q);
+                        if (!isFinite(score)) return;
+                        ranked.push({ name: String(name), score: score });
+                    });
+
+                    ranked.sort(function (a, b) {
+                        if (a.score !== b.score) return a.score - b.score;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    return ranked.slice(0, CREATURE_SUGGESTION_LIMIT).map(function (item) {
+                        return item.name;
+                    });
+                }
+
+                function hideCreatureSuggestions() {
+                    if (!creatureUi.suggestionsEl || !creatureUi.inputEl) return;
+                    creatureUi.suggestionsEl.hidden = true;
+                    creatureUi.suggestionsEl.innerHTML = '';
+                    creatureState.suggestionNames = [];
+                    creatureState.activeSuggestionIndex = -1;
+                    creatureUi.inputEl.setAttribute('aria-expanded', 'false');
+                }
+
+                function renderCreatureSuggestions(names) {
+                    if (!creatureUi.suggestionsEl || !creatureUi.inputEl) return;
+
+                    creatureState.suggestionNames = names || [];
+                    creatureState.activeSuggestionIndex = names.length ? 0 : -1;
+                    creatureUi.suggestionsEl.innerHTML = '';
+
+                    if (!names.length) {
+                        hideCreatureSuggestions();
+                        return;
+                    }
+
+                    names.forEach(function (name, index) {
+                        var item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'tibia-creature-suggestions__item' + (index === 0 ? ' is-active' : '');
+                        item.setAttribute('role', 'option');
+                        item.textContent = name;
+                        item.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                            selectCreatureSuggestion(name);
+                        });
+                        creatureUi.suggestionsEl.appendChild(item);
+                    });
+
+                    creatureUi.suggestionsEl.hidden = false;
+                    creatureUi.inputEl.setAttribute('aria-expanded', 'true');
+                }
+
+                function setActiveSuggestion(index) {
+                    if (!creatureUi.suggestionsEl) return;
+                    var items = creatureUi.suggestionsEl.querySelectorAll('.tibia-creature-suggestions__item');
+                    if (!items.length) return;
+
+                    var next = index;
+                    if (next < 0) next = items.length - 1;
+                    if (next >= items.length) next = 0;
+                    creatureState.activeSuggestionIndex = next;
+
+                    Array.prototype.forEach.call(items, function (el, i) {
+                        if (i === next) {
+                            el.classList.add('is-active');
+                            if (el.scrollIntoView) {
+                                el.scrollIntoView({ block: 'nearest' });
+                            }
+                        } else {
+                            el.classList.remove('is-active');
+                        }
+                    });
+                }
+
+                function selectCreatureSuggestion(name) {
+                    var key = normalizeCreatureName(name);
+                    if (!key) return;
+                    if (addCreatureKey(key)) {
+                        if (creatureUi.inputEl) creatureUi.inputEl.value = '';
+                        hideCreatureSuggestions();
+                    }
+                }
+
+                function ensureCreatureSize(key, done) {
+                    if (creatureState.sizeByKey[key]) {
+                        if (done) done(creatureState.sizeByKey[key]);
+                        return;
+                    }
+
+                    var probe = new Image();
+                    probe.onload = function () {
+                        var natW = probe.naturalWidth || 32;
+                        var natH = probe.naturalHeight || 32;
+                        var scale = Math.max(2, Math.round(CREATURE_ICON_TARGET_HEIGHT / natH));
+                        var size = { w: natW * scale, h: natH * scale };
+                        creatureState.sizeByKey[key] = size;
+                        if (done) done(size);
+                        updateCreatureMarkers();
+                        renderCreatureNav();
+                    };
+                    probe.onerror = function () {
+                        var size = { w: CREATURE_ICON_TARGET_HEIGHT, h: CREATURE_ICON_TARGET_HEIGHT };
+                        creatureState.sizeByKey[key] = size;
+                        if (done) done(size);
+                    };
+                    probe.src = creatureGifUrlForKey(key);
+                }
+
+                function getCreatureStackIcon(key, count) {
+                    var size = creatureState.sizeByKey[key] || {
+                        w: CREATURE_ICON_TARGET_HEIGHT,
+                        h: CREATURE_ICON_TARGET_HEIGHT
+                    };
+                    var n = Number(count) || 1;
+                    var badgeHtml = '';
+                    if (n > 1) {
+                        badgeHtml =
+                            '<span class="tibia-creature-stack-badge">' +
+                            String(n) +
+                            '</span>';
+                    }
+
+                    var html =
+                        '<div class="tibia-creature-icon-wrap">' +
+                        '<img class="tibia-creature-icon-img" src="' +
+                        creatureGifUrlForKey(key) +
+                        '" width="' + size.w + '" height="' + size.h +
+                        '" alt="" draggable="false" />' +
+                        badgeHtml +
+                        '</div>';
+
+                    return window.L.divIcon({
+                        className: 'tibia-creature-icon',
+                        html: html,
+                        iconSize: [size.w, size.h],
+                        iconAnchor: [
+                            Math.round(size.w / 2),
+                            Math.max(1, size.h - CREATURE_ICON_ANCHOR_NUDGE_Y)
+                        ]
+                    });
+                }
+
+                function renderCreatureNav() {
+                    if (!creatureUi.navEl) return;
+
+                    var key = creatureState.activeKey;
+                    var stacks = creatureState.navStacks;
+                    if (!key || !stacks.length) {
+                        creatureUi.navEl.hidden = true;
+                        return;
+                    }
+
+                    var idx = creatureState.navIndex;
+                    if (idx < 0) idx = 0;
+                    if (idx >= stacks.length) idx = stacks.length - 1;
+                    creatureState.navIndex = idx;
+
+                    var stack = stacks[idx];
+                    var name = creatureState.nameByKey[key] || key;
+
+                    creatureUi.navEl.hidden = false;
+                    if (creatureUi.navGifEl) {
+                        creatureUi.navGifEl.src = creatureGifUrlForKey(key);
+                        creatureUi.navGifEl.alt = name;
+                    }
+                    if (creatureUi.navNameEl) {
+                        creatureUi.navNameEl.textContent = name;
+                    }
+                    if (creatureUi.navInfoEl) {
+                        creatureUi.navInfoEl.textContent =
+                            '#' + (idx + 1) + '/' + stacks.length +
+                            ' • ' + stack.count + 'x • z=' + stack.z;
+                    }
+                }
+
+                function focusNavStack(index, opts) {
+                    opts = opts || {};
+                    if (!creatureState.navStacks.length) return;
+
+                    var next = index;
+                    if (next < 0) next = creatureState.navStacks.length - 1;
+                    if (next >= creatureState.navStacks.length) next = 0;
+                    creatureState.navIndex = next;
+
+                    var stack = creatureState.navStacks[next];
+                    if (!stack) return;
+
+                    setFloor(stack.z);
+                    var zoom = state.map.getZoom();
+                    if (!isFinite(zoom) || zoom < 1) {
+                        zoom = Math.min(CONFIG.maxZoom, Math.max(1, CONFIG.defaultZoom));
+                    }
+                    centerOnWorld(stack.x, stack.y, zoom);
+                    renderCreatureNav();
+                    if (!opts.skipMarkers) {
+                        updateCreatureMarkers();
+                    }
+                }
+
+                function activateCreatureNav(key, jumpToDensest) {
+                    creatureState.activeKey = key;
+                    creatureState.navStacks = buildNavStacks(key);
+                    creatureState.navIndex = 0;
+                    renderSelectedCreatureChips();
+                    renderCreatureNav();
+                    if (jumpToDensest && creatureState.navStacks.length) {
+                        focusNavStack(0);
+                    } else {
+                        updateCreatureMarkers();
+                    }
+                }
+
+                function ensureFloorOverlay(z) {
+                    var floorZ = clampZ(z);
+                    var floorId = floorIdFromZ(floorZ);
+                    if (state.floorOverlays[floorId]) {
+                        return state.floorOverlays[floorId];
+                    }
+
+                    var overlay = window.L.imageOverlay(
+                        CONFIG.floorImageUrl(floorId),
+                        state.imageBounds,
+                        {
+                            interactive: false,
+                            opacity: 0,
+                            className: 'tibia-floor-overlay'
+                        }
+                    );
+                    overlay.addTo(state.map);
+                    state.floorOverlays[floorId] = overlay;
+                    return overlay;
+                }
+
+                function preloadFloorImages() {
+                    if (state.floorsPreloaded) return;
+                    state.floorsPreloaded = true;
+
+                    // Load ground first, then neighbors, then the rest so floor switches feel instant.
+                    var order = [];
+                    var seen = {};
+                    function pushZ(z) {
+                        var clamped = clampZ(z);
+                        if (seen[clamped]) return;
+                        seen[clamped] = true;
+                        order.push(clamped);
+                    }
+
+                    pushZ(CONFIG.defaultZ);
+                    for (var d = 1; d <= CONFIG.maxZ; d += 1) {
+                        pushZ(CONFIG.defaultZ - d);
+                        pushZ(CONFIG.defaultZ + d);
+                    }
+
+                    order.forEach(function (z) {
+                        ensureFloorOverlay(z);
+                        var img = new Image();
+                        img.decoding = 'async';
+                        img.src = CONFIG.floorImageUrl(floorIdFromZ(z));
+                    });
+                }
+
+                function renderSelectedCreatureChips() {
+                    if (!creatureUi.selectedEl) return;
+
+                    creatureUi.selectedEl.innerHTML = '';
+
+                    creatureState.selectedKeys.forEach(function (key) {
+                        var name = creatureState.nameByKey[key] || key;
+
+                        var chip = document.createElement('span');
+                        chip.className = 'badge badge-primary tibia-creature-chip' +
+                            (key === creatureState.activeKey ? ' is-active' : '');
+                        chip.title = 'Focar áreas de ' + name;
+                        chip.addEventListener('click', function (e) {
+                            if (e.target && e.target.classList &&
+                                e.target.classList.contains('tibia-creature-chip-remove')) {
+                                return;
+                            }
+                            activateCreatureNav(key, true);
+                        });
+
+                        var text = document.createElement('span');
+                        text.textContent = name;
+                        chip.appendChild(text);
+
+                        var removeBtn = document.createElement('button');
+                        removeBtn.type = 'button';
+                        removeBtn.className = 'tibia-creature-chip-remove';
+                        removeBtn.setAttribute('aria-label', 'Remover ' + name);
+                        removeBtn.textContent = '×';
+                        removeBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            removeCreatureKey(key);
+                        });
+                        chip.appendChild(removeBtn);
+
+                        creatureUi.selectedEl.appendChild(chip);
+                    });
+                }
+
+                function updateCreatureMarkers() {
+                    if (!creatureState.layer) return;
+                    creatureState.layer.clearLayers();
+
+                    if (!creatureState.data) return;
+                    if (!creatureState.selectedKeys.length) return;
+
+                    var z = state.z;
+                    var cell = cellSizeForZoom(state.map.getZoom());
+
+                    creatureState.selectedKeys.forEach(function (key) {
+                        var points = creatureState.data.spawns && creatureState.data.spawns[key];
+                        if (!Array.isArray(points) || !points.length) return;
+
+                        ensureCreatureSize(key);
+                        var clusters = buildClusters(points, cell, z);
+                        var title = creatureState.nameByKey[key] || key;
+
+                        clusters.forEach(function (cluster) {
+                            var pixel = toPixelFromWorld(state.bounds, cluster.x, cluster.y);
+                            var latlng = window.L.latLng(pixel.y, pixel.x);
+                            var label = title + (cluster.count > 1 ? ' ×' + cluster.count : '');
+
+                            window.L.marker(latlng, {
+                                icon: getCreatureStackIcon(key, cluster.count),
+                                interactive: false,
+                                keyboard: false,
+                                title: label,
+                                alt: label
+                            }).addTo(creatureState.layer);
+                        });
+                    });
+                }
+
+                function addCreatureKey(key) {
+                    if (!creatureState.data || !creatureState.data.spawns) return false;
+                    if (!creatureState.data.spawns[key]) return false;
+
+                    var already = creatureState.selectedKeys.indexOf(key) !== -1;
+                    if (!already) {
+                        creatureState.selectedKeys.push(key);
+                    }
+
+                    ensureCreatureSize(key);
+                    activateCreatureNav(key, true);
+                    return true;
+                }
+
+                function removeCreatureKey(key) {
+                    var idx = creatureState.selectedKeys.indexOf(key);
+                    if (idx === -1) return;
+                    creatureState.selectedKeys.splice(idx, 1);
+
+                    if (creatureState.activeKey === key) {
+                        creatureState.activeKey = creatureState.selectedKeys.length
+                            ? creatureState.selectedKeys[creatureState.selectedKeys.length - 1]
+                            : null;
+                        creatureState.navStacks = creatureState.activeKey
+                            ? buildNavStacks(creatureState.activeKey)
+                            : [];
+                        creatureState.navIndex = 0;
+                    }
+
+                    renderSelectedCreatureChips();
+                    renderCreatureNav();
+                    updateCreatureMarkers();
+                }
+
+                function tryAddCreatureFromInput() {
+                    if (!creatureUi.inputEl) return;
+
+                    if (creatureState.activeSuggestionIndex >= 0 &&
+                        creatureState.suggestionNames[creatureState.activeSuggestionIndex]) {
+                        selectCreatureSuggestion(
+                            creatureState.suggestionNames[creatureState.activeSuggestionIndex]
+                        );
+                        return;
+                    }
+
+                    var matches = filterCreatureSuggestions(creatureUi.inputEl.value);
+                    if (matches.length) {
+                        selectCreatureSuggestion(matches[0]);
+                        return;
+                    }
+
+                    var key = normalizeCreatureName(creatureUi.inputEl.value);
+                    if (!key) return;
+                    if (addCreatureKey(key)) {
+                        creatureUi.inputEl.value = '';
+                        hideCreatureSuggestions();
+                    }
+                }
+
+                function initCreaturePicker() {
+                    if (!creatureUi.inputEl || !creatureUi.suggestionsEl || !creatureUi.selectedEl) {
+                        return;
+                    }
+
+                    if (creatureUi.panelEl && window.L && window.L.DomEvent) {
+                        window.L.DomEvent.disableClickPropagation(creatureUi.panelEl);
+                        window.L.DomEvent.disableScrollPropagation(creatureUi.panelEl);
+                    }
+
+                    if (creatureUi.navPrevEl) {
+                        creatureUi.navPrevEl.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                        });
+                        creatureUi.navPrevEl.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            focusNavStack(creatureState.navIndex - 1);
+                        });
+                    }
+                    if (creatureUi.navNextEl) {
+                        creatureUi.navNextEl.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                        });
+                        creatureUi.navNextEl.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            focusNavStack(creatureState.navIndex + 1);
+                        });
+                    }
+
+                    fetchJson(CONFIG.creatureSpawnsUrl)
+                        .then(function (data) {
+                            if (!data || !Array.isArray(data.creatures) || !data.spawns) {
+                                throw new Error('Invalid creature-spawns.json');
+                            }
+
+                            creatureState.data = data;
+                            creatureState.nameByKey = {};
+
+                            data.creatures.forEach(function (name) {
+                                var key = normalizeCreatureName(name);
+                                if (!key) return;
+                                creatureState.nameByKey[key] = String(name);
+                            });
+
+                            creatureUi.inputEl.addEventListener('input', function () {
+                                renderCreatureSuggestions(filterCreatureSuggestions(creatureUi.inputEl.value));
+                            });
+
+                            creatureUi.inputEl.addEventListener('focus', function () {
+                                if (creatureUi.inputEl.value) {
+                                    renderCreatureSuggestions(filterCreatureSuggestions(creatureUi.inputEl.value));
+                                }
+                            });
+
+                            creatureUi.inputEl.addEventListener('blur', function () {
+                                setTimeout(hideCreatureSuggestions, 120);
+                            });
+
+                            creatureUi.inputEl.addEventListener('keydown', function (e) {
+                                if (!e) return;
+                                var key = e.key || e.keyCode;
+                                var open = creatureState.suggestionNames.length > 0 &&
+                                    creatureUi.suggestionsEl && !creatureUi.suggestionsEl.hidden;
+
+                                if ((key === 'ArrowDown' || key === 40) && open) {
+                                    e.preventDefault();
+                                    setActiveSuggestion(creatureState.activeSuggestionIndex + 1);
+                                    return;
+                                }
+                                if ((key === 'ArrowUp' || key === 38) && open) {
+                                    e.preventDefault();
+                                    setActiveSuggestion(creatureState.activeSuggestionIndex - 1);
+                                    return;
+                                }
+                                if (key === 'Escape' || key === 27) {
+                                    hideCreatureSuggestions();
+                                    return;
+                                }
+                                if (key === 'Enter' || key === 13) {
+                                    e.preventDefault();
+                                    tryAddCreatureFromInput();
+                                }
+                            });
+
+                            renderSelectedCreatureChips();
+                            renderCreatureNav();
+                            updateCreatureMarkers();
+                        })
+                        .catch(function (err) {
+                            console.error(err);
+                        });
+                }
+
                 var interaction = {
                     locked: true,
                     overlayEl: null,
-                    unlockInProgress: false
+                    unlockInProgress: false,
+                    savedScrollY: 0,
+                    scrollLocked: false
                 };
 
                 function setHandlerEnabled(handler, enabled) {
@@ -209,12 +842,51 @@
                     }
                 }
 
+                function setPageScrollLocked(locked) {
+                    var html = document.documentElement;
+                    var body = document.body;
+                    if (!html || !body) return;
+
+                    if (locked) {
+                        if (interaction.scrollLocked) return;
+                        interaction.scrollLocked = true;
+                        interaction.savedScrollY = window.scrollY || window.pageYOffset || 0;
+                        html.classList.add('tibia-map-scroll-lock');
+                        body.classList.add('tibia-map-scroll-lock');
+                        // Keep scroll position as-is (no position:fixed) to avoid jump.
+                    } else {
+                        if (!interaction.scrollLocked) return;
+                        interaction.scrollLocked = false;
+                        html.classList.remove('tibia-map-scroll-lock');
+                        body.classList.remove('tibia-map-scroll-lock');
+                        // Do not scrollTo — overflow lock never moved the viewport.
+                    }
+                }
+
                 function setInteractionLocked(locked) {
-                    interaction.locked = Boolean(locked);
+                    var shouldLock = Boolean(locked);
+                    var wasLocked = interaction.locked;
+                    interaction.locked = shouldLock;
                     if (interaction.overlayEl) {
                         interaction.overlayEl.classList.toggle('is-hidden', !interaction.locked);
                     }
                     setMapInteractivityEnabled(!interaction.locked);
+
+                    var mapContainer = state.map.getContainer();
+                    if (mapContainer) {
+                        mapContainer.classList.toggle('is-interaction-locked', interaction.locked);
+                    }
+
+                    // Restore page scroll only when leaving map interaction.
+                    if (shouldLock && !wasLocked) {
+                        setPageScrollLocked(false);
+                    }
+                }
+
+                function neutralizeAnchor(el) {
+                    if (!el) return;
+                    el.setAttribute('href', 'javascript:void(0)');
+                    el.setAttribute('role', 'button');
                 }
 
                 function getFixedHeaderHeight() {
@@ -229,20 +901,23 @@
                 }
 
                 function scrollMapIntoViewIfNeeded() {
-                    // Always perform an anchor-like scroll to align the map's top edge
-                    // right below the sticky header (if fixed) with a small gap.
-                    var container = state.map.getContainer();
+                    // Scroll only the map block into view — never jump to the page footer.
+                    var mapSection = document.getElementById('map-content') || state.map.getContainer();
                     var epsilonPx = 2;
-                    var extraGapPx = 28;
-                    var maxWaitMs = 2500;
-                    var maxAdjustments = 3;
+                    var extraGapPx = 12;
+                    var maxWaitMs = 1800;
+                    var maxAdjustments = 4;
                     var adjustments = 0;
+
+                    var maxScrollY = function () {
+                        var doc = document.documentElement;
+                        return Math.max(0, (doc.scrollHeight - window.innerHeight) | 0);
+                    };
 
                     var computeDelta = function () {
                         var headerHeight = getFixedHeaderHeight();
-                        // Extra gap so the sticky header never covers map controls.
                         var safeTop = headerHeight + extraGapPx;
-                        var rect = container.getBoundingClientRect();
+                        var rect = mapSection.getBoundingClientRect();
                         return {
                             delta: rect.top - safeTop,
                             safeTop: safeTop
@@ -251,7 +926,10 @@
 
                     var applyScroll = function () {
                         var d = computeDelta();
-                        var targetScrollY = Math.max(0, window.scrollY + d.delta);
+                        var targetScrollY = window.scrollY + d.delta;
+                        // Clamp so we cannot overshoot into the footer.
+                        var mapBottomLimit = window.scrollY + mapSection.getBoundingClientRect().bottom - window.innerHeight;
+                        targetScrollY = Math.max(0, Math.min(targetScrollY, maxScrollY(), Math.max(0, mapBottomLimit)));
                         window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
                         adjustments += 1;
                     };
@@ -282,8 +960,6 @@
                                 lastY = window.scrollY;
                             }
 
-                            // If smooth scroll settled but we're still misaligned (header became fixed, etc.),
-                            // nudge one more time.
                             if (stillFrames > 10 && adjustments < maxAdjustments) {
                                 applyScroll();
                                 stillFrames = 0;
@@ -327,19 +1003,37 @@
                 function setFloor(z) {
                     state.z = clampZ(z);
                     var floorId = floorIdFromZ(state.z);
+                    var nextOverlay = ensureFloorOverlay(state.z);
 
-                    if (state.overlay) {
-                        state.map.removeLayer(state.overlay);
+                    function applyVisibility() {
+                        Object.keys(state.floorOverlays).forEach(function (id) {
+                            var overlay = state.floorOverlays[id];
+                            if (!overlay) return;
+                            if (id === floorId) {
+                                overlay.setOpacity(1);
+                                if (overlay.bringToBack) {
+                                    overlay.bringToBack();
+                                }
+                            } else {
+                                overlay.setOpacity(0);
+                            }
+                        });
                     }
 
-                    state.overlay = window.L.imageOverlay(
-                        CONFIG.floorImageUrl(floorId),
-                        state.imageBounds,
-                        { interactive: false }
-                    );
-                    state.overlay.addTo(state.map);
+                    applyVisibility();
 
+                    // If the PNG is still decoding, keep retrying opacity once it loads.
+                    if (nextOverlay && typeof nextOverlay.once === 'function') {
+                        nextOverlay.once('load', function () {
+                            if (floorIdFromZ(state.z) === floorId) {
+                                applyVisibility();
+                            }
+                        });
+                    }
+
+                    state.overlay = nextOverlay;
                     syncFloorControl();
+                    updateCreatureMarkers();
                 }
 
                 function stepFloor(delta) {
@@ -355,19 +1049,19 @@
                         onAdd: function () {
                             var container = window.L.DomUtil.create('div', 'leaflet-bar leaflet-control tibia-floor-control');
                             var up = window.L.DomUtil.create('a', 'tibia-floor-up', container);
-                            up.href = '#';
+                            neutralizeAnchor(up);
                             up.title = 'Andar acima';
                             up.setAttribute('aria-label', 'Andar acima');
                             up.innerHTML = '&#9650;';
 
                             var label = window.L.DomUtil.create('a', 'tibia-floor-label', container);
-                            label.href = '#';
+                            neutralizeAnchor(label);
                             label.title = 'Andar atual';
                             label.setAttribute('aria-label', 'Andar atual');
                             label.textContent = formatRelativeLevel(relativeLevelFromZ(state.z));
 
                             var down = window.L.DomUtil.create('a', 'tibia-floor-down', container);
-                            down.href = '#';
+                            neutralizeAnchor(down);
                             down.title = 'Andar abaixo';
                             down.setAttribute('aria-label', 'Andar abaixo');
                             down.innerHTML = '&#9660;';
@@ -382,16 +1076,19 @@
 
                             window.L.DomEvent.on(up, 'click', function (e) {
                                 window.L.DomEvent.preventDefault(e);
+                                window.L.DomEvent.stop(e);
                                 stepFloor(-1);
                             });
 
                             window.L.DomEvent.on(down, 'click', function (e) {
                                 window.L.DomEvent.preventDefault(e);
+                                window.L.DomEvent.stop(e);
                                 stepFloor(1);
                             });
 
                             window.L.DomEvent.on(label, 'click', function (e) {
                                 window.L.DomEvent.preventDefault(e);
+                                window.L.DomEvent.stop(e);
                             });
 
                             return container;
@@ -400,6 +1097,18 @@
 
                     state.map.addControl(new FloorControl());
                 })();
+
+                // Leaflet zoom +/- uses <a href="#"> which can jump the page; neutralize them.
+                if (state.map.zoomControl && state.map.zoomControl.getContainer) {
+                    var zoomLinks = state.map.zoomControl.getContainer().querySelectorAll('a');
+                    Array.prototype.forEach.call(zoomLinks, function (link) {
+                        neutralizeAnchor(link);
+                    });
+                }
+
+                state.map.on('zoomend', function () {
+                    updateCreatureMarkers();
+                });
 
                 (function addInteractionOverlay() {
                     var container = state.map.getContainer();
@@ -420,10 +1129,11 @@
                         if (interaction.unlockInProgress) return;
                         interaction.unlockInProgress = true;
 
-                        // If the header is sticky, ensure the map is fully visible below it,
-                        // and only then unlock interactions.
+                        // Align map under the sticky header, then freeze page scroll so
+                        // zoom/pan cannot push controls off-screen.
                         scrollMapIntoViewIfNeeded()
                             .then(function () {
+                                setPageScrollLocked(true);
                                 setInteractionLocked(false);
                                 state.map.invalidateSize();
                             })
@@ -440,12 +1150,76 @@
                             setInteractionLocked(true);
                         }
                     }, true);
+
+                    document.addEventListener('keydown', function (e) {
+                        if (!e) return;
+                        var key = e.key || e.keyCode;
+                        if (key !== 'Escape' && key !== 27) return;
+
+                        // Close suggestions first if the creature search is open.
+                        if (creatureUi.suggestionsEl && !creatureUi.suggestionsEl.hidden) {
+                            hideCreatureSuggestions();
+                            return;
+                        }
+
+                        if (!interaction.locked) {
+                            e.preventDefault();
+                            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                                document.activeElement.blur();
+                            }
+                            setInteractionLocked(true);
+                        }
+                    });
                 })();
+
+                function createPointMarkerIcon() {
+                    // Classic Leaflet pin (2x asset), rendered larger, with a side "+" action.
+                    var pinUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
+                    return window.L.divIcon({
+                        className: 'tibia-point-marker',
+                        html:
+                            '<img class="tibia-point-marker__pin-img" src="' + pinUrl +
+                            '" width="37" height="61" alt="" draggable="false" />' +
+                            '<button type="button" class="tibia-point-marker__plus" aria-label="Adicionar comentário">+</button>' +
+                            '<span class="tibia-point-marker__comment">Adicionar comentário</span>',
+                        iconSize: [64, 61],
+                        // Tip of the default pin.
+                        iconAnchor: [18, 61]
+                    });
+                }
+
+                function bindPointMarkerActions(marker) {
+                    if (!marker || marker._tibiaPointBound) return;
+                    marker._tibiaPointBound = true;
+
+                    marker.on('add', function () {
+                        var el = marker.getElement();
+                        if (!el) return;
+                        var plusBtn = el.querySelector('.tibia-point-marker__plus');
+                        if (!plusBtn || plusBtn._tibiaBound) return;
+                        plusBtn._tibiaBound = true;
+                        plusBtn.addEventListener('click', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            // Placeholder: comment action comes later.
+                        });
+                        plusBtn.addEventListener('mousedown', function (e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                        });
+                    });
+                }
 
                 function setMarkerAtPixel(pixelX, pixelY) {
                     var latlng = window.L.latLng(pixelY, pixelX);
                     if (!state.marker) {
-                        state.marker = window.L.marker(latlng, { keyboard: false });
+                        state.marker = window.L.marker(latlng, {
+                            icon: createPointMarkerIcon(),
+                            keyboard: false,
+                            interactive: true,
+                            zIndexOffset: 600
+                        });
+                        bindPointMarkerActions(state.marker);
                         state.marker.addTo(state.map);
                     } else {
                         state.marker.setLatLng(latlng);
@@ -481,6 +1255,14 @@
 
                 state.map.on('click', onMapClick);
 
+                initCreaturePicker();
+
+                // Keep the creature tab inside the Leaflet map container so it stays
+                // usable while panning/zooming and above map panes.
+                if (creatureUi.panelEl && state.map && state.map.getContainer) {
+                    state.map.getContainer().appendChild(creatureUi.panelEl);
+                }
+
                 var url = new URL(window.location.href);
                 var point = parsePointParam(url.searchParams.get('point'));
                 if (point) {
@@ -489,7 +1271,12 @@
                     centerOnWorld(point.worldX, point.worldY, point.zoom);
                 } else {
                     setFloor(CONFIG.defaultZ);
+                    // Start a bit more zoomed-in than fitBounds (whole-world postage stamp).
+                    var startCenter = window.L.latLng(bounds.height / 2, bounds.width / 2);
+                    state.map.setView(startCenter, CONFIG.defaultZoom, { animate: false });
                 }
+
+                preloadFloorImages();
 
                 setTimeout(function () {
                     state.map.invalidateSize();
