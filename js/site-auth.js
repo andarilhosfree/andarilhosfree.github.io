@@ -48,7 +48,8 @@
 			displayName: data.displayName || '',
 			permissions: {
 				blog: perms.blog === true,
-				mapComments: perms.mapComments === true
+				mapComments: perms.mapComments === true,
+				admin: perms.admin === true
 			}
 		};
 	}
@@ -81,7 +82,8 @@
 				displayName: user.displayName || '',
 				permissions: {
 					blog: false,
-					mapComments: true
+					mapComments: true,
+					admin: false
 				},
 				createdAt: global.firebase.firestore.FieldValue.serverTimestamp()
 			};
@@ -97,6 +99,10 @@
 
 	function hasPermission(member, key) {
 		return Boolean(member && member.permissions && member.permissions[key]);
+	}
+
+	function isAdmin(member) {
+		return hasPermission(member, 'admin');
 	}
 
 	var authStateListeners = [];
@@ -222,6 +228,23 @@
 		});
 	}
 
+	function collapseMobileNav() {
+		var navEl = document.getElementById('navbarNavDropdown');
+		if (!navEl) return;
+
+		if (global.jQuery && typeof global.jQuery.fn.collapse === 'function') {
+			global.jQuery(navEl).collapse('hide');
+		} else {
+			navEl.classList.remove('show');
+		}
+
+		var toggler = document.querySelector('.navbar-toggler');
+		if (toggler) {
+			toggler.classList.add('collapsed');
+			toggler.setAttribute('aria-expanded', 'false');
+		}
+	}
+
 	global.AndarilhosAuth = {
 		init: init,
 		isConfigured: function () {
@@ -236,6 +259,8 @@
 		whenAuthReady: whenAuthReady,
 		refreshMember: refreshMember,
 		hasPermission: hasPermission,
+		isAdmin: isAdmin,
+		collapseMobileNav: collapseMobileNav,
 		getCachedMember: function () {
 			return memberCache.data;
 		}

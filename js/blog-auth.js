@@ -55,7 +55,8 @@
 
 		function updateUi(user, member) {
 			var signedIn = Boolean(user);
-			var canBlog = window.AndarilhosAuth.hasPermission(member, 'blog');
+			var canBlog = window.AndarilhosAuth.hasPermission(member, 'blog')
+				|| window.AndarilhosAuth.isAdmin(member);
 
 			setVisible(loginNav, !signedIn);
 			setVisible(userNav, signedIn);
@@ -82,6 +83,15 @@
 			window.AndarilhosAuth.onAuthStateChanged(updateUi);
 		});
 
+		var loginLink = loginNav.querySelector('a');
+		if (loginLink) {
+			loginLink.addEventListener('click', function () {
+				if (window.AndarilhosAuth.collapseMobileNav) {
+					window.AndarilhosAuth.collapseMobileNav();
+				}
+			});
+		}
+
 		googleBtn.addEventListener('click', function () {
 			if (loginError) loginError.textContent = '';
 			setBusy(googleBtn, true, 'Abrindo Google…');
@@ -105,6 +115,9 @@
 		if (logoutBtn) {
 			logoutBtn.addEventListener('click', function (e) {
 				e.preventDefault();
+				if (window.AndarilhosAuth.collapseMobileNav) {
+					window.AndarilhosAuth.collapseMobileNav();
+				}
 				window.AndarilhosAuth.signOut();
 			});
 		}

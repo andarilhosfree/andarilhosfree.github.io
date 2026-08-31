@@ -28,9 +28,15 @@
 		if (breadcrumbEl) breadcrumbEl.textContent = title;
 
 		if (coverEl && coverWrap) {
-			coverEl.src = window.BlogCommon.coverForIndex(0, data.coverUrl);
-			coverEl.alt = title;
-			setVisible(coverWrap, true);
+			var coverUrl = window.BlogCommon.coverForPost(data.coverUrl);
+			if (coverUrl) {
+				coverEl.src = coverUrl;
+				coverEl.alt = title;
+				setVisible(coverWrap, true);
+			} else {
+				coverEl.removeAttribute('src');
+				setVisible(coverWrap, false);
+			}
 		}
 
 		if (metaEl) {
@@ -49,9 +55,11 @@
 		var editWrap = document.getElementById('blogPostEditWrap');
 		if (editWrap && window.AndarilhosAuth) {
 			window.AndarilhosAuth.whenAuthReady().then(function (state) {
-				var canEdit = state.user
-					&& data.authorUid === state.user.uid
-					&& window.AndarilhosAuth.hasPermission(state.member, 'blog');
+				var isOwner = state.user && data.authorUid === state.user.uid;
+				var canEdit = state.user && (
+					window.AndarilhosAuth.isAdmin(state.member)
+					|| (isOwner && window.AndarilhosAuth.hasPermission(state.member, 'blog'))
+				);
 				if (canEdit) {
 					var editLink = document.getElementById('blogPostEditLink');
 					if (editLink) {

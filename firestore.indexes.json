@@ -24,6 +24,14 @@
 				{ "fieldPath": "status", "order": "ASCENDING" },
 				{ "fieldPath": "updatedAt", "order": "DESCENDING" }
 			]
+		},
+		{
+			"collectionGroup": "mapComments",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{ "fieldPath": "z", "order": "ASCENDING" },
+				{ "fieldPath": "createdAt", "order": "DESCENDING" }
+			]
 		}
 	],
 	"fieldOverrides": []

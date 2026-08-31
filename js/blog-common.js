@@ -1,11 +1,7 @@
 (function (global) {
 	'use strict';
 
-	var DEFAULT_COVERS = [
-		'images/blog/grid/pic1.jpg',
-		'images/blog/grid/pic2.jpg',
-		'images/blog/grid/pic3.jpg'
-	];
+	var DEFAULT_LIST_COVER = 'images/blog/default-cover.jpg';
 
 	var MONTHS_PT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -30,11 +26,15 @@
 		};
 	}
 
-	function coverForIndex(index, coverUrl) {
+	function coverForListing(coverUrl) {
 		if (coverUrl) {
 			return coverUrl;
 		}
-		return DEFAULT_COVERS[index % DEFAULT_COVERS.length];
+		return DEFAULT_LIST_COVER;
+	}
+
+	function coverForPost(coverUrl) {
+		return coverUrl || null;
 	}
 
 	function getFirestore() {
@@ -55,6 +55,37 @@
 			.orderBy('createdAt', 'desc')
 			.limit(limit || 24)
 			.get();
+	}
+
+	function fetchPublishedPostsPage(options) {
+		var db = getFirestore();
+		if (!db) {
+			return Promise.reject(new Error('Firebase não configurado.'));
+		}
+		var opts = options || {};
+		var pageSize = opts.pageSize || 12;
+		var afterDoc = opts.afterDoc || null;
+		var query = db.collection('posts')
+			.where('status', '==', 'published')
+			.orderBy('createdAt', 'desc')
+			.limit(pageSize + 1);
+		if (afterDoc) {
+			query = query.startAfter(afterDoc);
+		}
+		return query.get().then(function (snapshot) {
+			var docs = [];
+			snapshot.forEach(function (doc) {
+				docs.push(doc);
+			});
+			var hasMore = docs.length > pageSize;
+			var pageDocs = docs.slice(0, pageSize);
+			return {
+				docs: pageDocs,
+				hasMore: hasMore,
+				lastDoc: pageDocs.length ? pageDocs[pageDocs.length - 1] : null,
+				empty: pageDocs.length === 0
+			};
+		});
 	}
 
 	function fetchPublishedPostBySlug(slug) {
@@ -148,11 +179,49 @@
 		return fetchAuthorPosts(authorUid, 'draft', limit);
 	}
 
+	function renderPostCard(doc) {
+		var data = doc.data();
+		var slug = data.slug || doc.id;
+		var href = 'blog-post.html?slug=' + encodeURIComponent(slug);
+		var date = formatPostDate(data.createdAt);
+		var title = escapeHtml(data.title || 'Sem título');
+		var excerpt = escapeHtml(data.excerpt || '');
+		var author = escapeHtml(data.authorName || 'Andarilhos Free');
+		var cover = escapeHtml(coverForListing(data.coverUrl));
+
+		return (
+			'<div class="col-lg-4 col-md-6 col-sm-12 m-b30">' +
+			'<div class="blog-post blog-grid blog-rounded blog-effect1">' +
+			'<div class="dlab-post-media dlab-img-effect">' +
+			'<a href="' + href + '"><img src="' + cover + '" alt="' + title + '"></a>' +
+			'</div>' +
+			'<div class="dlab-info p-a20 border-1">' +
+			'<div class="dlab-post-meta">' +
+			'<ul>' +
+			'<li class="post-date"><strong>' + date.day + ' ' + date.month + '</strong> <span>' + date.year + '</span></li>' +
+			'<li class="post-author">Por <span>' + author + '</span></li>' +
+			'</ul>' +
+			'</div>' +
+			'<div class="dlab-post-title">' +
+			'<h4 class="post-title"><a href="' + href + '">' + title + '</a></h4>' +
+			'</div>' +
+			(excerpt ? '<div class="dlab-post-text"><p>' + excerpt + '</p></div>' : '') +
+			'<div class="dlab-post-readmore">' +
+			'<a href="' + href + '" title="Leia mais" rel="bookmark" class="site-button-link">Leia mais</a>' +
+			'</div>' +
+			'</div></div></div>'
+		);
+	}
+
 	global.BlogCommon = {
 		escapeHtml: escapeHtml,
 		formatPostDate: formatPostDate,
-		coverForIndex: coverForIndex,
+		coverForListing: coverForListing,
+		coverForPost: coverForPost,
+		defaultListCover: DEFAULT_LIST_COVER,
+		renderPostCard: renderPostCard,
 		fetchPublishedPosts: fetchPublishedPosts,
+		fetchPublishedPostsPage: fetchPublishedPostsPage,
 		fetchPublishedPostBySlug: fetchPublishedPostBySlug,
 		indexErrorMessage: indexErrorMessage,
 		slugify: slugify,

@@ -32,6 +32,7 @@
 	<!-- STYLESHEETS -->
 	<link rel="stylesheet" type="text/css" href="css/plugins.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<link rel="stylesheet" type="text/css" href="css/blog-preview.css">
 	<link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
 	<link rel="stylesheet" type="text/css" href="css/templete.css">
 	<style>
@@ -291,6 +292,7 @@
 							<ul class="nav navbar-nav">
 								<li><a href="index.html">Home</a> </li>
 								<li><a href="index.html#apps-info">Sobre</a> </li>
+								<li><a href="map.html">Mapa</a> </li>
 								<li><a href="blog.html">Blog</a> </li>
 							</ul>
 						</div>
@@ -446,6 +448,27 @@
 						</div>
 					</div>
 				</div>
+				<!-- Blog preview -->
+				<div class="section-full content-inner blog-preview-block">
+					<div class="container">
+						<div class="section-head text-center">
+							<h2 class="title">Últimas publicações</h2>
+							<p>Novidades, dicas e conteúdos da comunidade Andarilhos Free.</p>
+						</div>
+						<div id="blogPreviewLoading" class="text-center p-a20">
+							<p class="font-16 m-b0">Carregando publicações…</p>
+						</div>
+						<div id="blogPreviewError" class="alert alert-danger d-none" role="alert"></div>
+						<div id="blogPreviewEmpty" class="text-center p-a40 d-none">
+							<p class="font-16 m-b0">Nenhuma publicação ainda. Volte em breve!</p>
+						</div>
+						<div id="blogPreviewList" class="row"></div>
+						<div class="blog-preview__cta text-center">
+							<a href="blog.html" class="site-button radius-xl">Ver todos os posts</a>
+						</div>
+					</div>
+				</div>
+				<!-- Blog preview END -->
 			</div>
 		</div>
 	</div>
@@ -459,6 +482,7 @@
 							<h5 class="m-b30 text-white">Páginas</h5>
 							<ul>
 								<li><a href="index.html">Home</a></li>
+								<li><a href="map.html">Mapa</a></li>
 								<li><a href="blog.html">Blog</a></li>
 								<li><a href="privacy-policy.html">Política de Privacidade</a></li>
 							</ul>
@@ -553,6 +577,13 @@
 	<script src='https://www.google.com/recaptcha/api.js'></script> <!-- Google API For Recaptcha  -->
 	<script src="js/dz.ajax.js"></script><!-- Contact Us -->
 	<script src="js/custom.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+	<script src="js/firebase-config.js" onerror="window.ANDARILHOS_FIREBASE_CONFIG=null"></script>
+	<script src="js/site-auth.js"></script>
+	<script src="js/blog-common.js"></script>
+	<script src="js/blog-preview.js"></script>
 	<!-- custom fuctions  -->
 	<script src="js/characters-list.js"></script>
 </body>

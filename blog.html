@@ -35,6 +35,7 @@
 	<link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
 	<link rel="stylesheet" type="text/css" href="css/templete.css">
 	<link rel="stylesheet" type="text/css" href="css/blog-auth-nav.css">
+	<link rel="stylesheet" type="text/css" href="css/blog-preview.css">
 	<style>
 		html {
 			scroll-behavior: smooth;
@@ -285,6 +286,7 @@
 							<ul class="nav navbar-nav">
 								<li><a href="index.html">Home</a> </li>
 								<li><a href="index.html#apps-info">Sobre</a> </li>
+								<li><a href="map.html">Mapa</a> </li>
 								<li><a href="blog.html">Blog</a> </li>
 								<li class="blog-auth-nav blog-auth-nav--account d-none" id="blogAuthLogin"><a href="#"
 										class="blog-auth-nav__login-link" data-toggle="modal"
@@ -336,6 +338,12 @@
 							<p class="font-16 m-b0">Nenhuma publicação ainda. Volte em breve!</p>
 						</div>
 						<div id="blogPostsList" class="row"></div>
+						<div id="blogPostsLoadMoreWrap" class="blog-posts-load-more text-center m-t20 d-none">
+							<button type="button" id="blogPostsLoadMore" class="site-button radius-xl outline outline-2">
+								Ver mais posts
+							</button>
+							<p id="blogPostsLoadMoreLoading" class="font-14 m-t15 m-b0 d-none">Carregando…</p>
+						</div>
 					</div>
 				</div>
 				<div class="section-full p-tb80">
@@ -368,6 +376,7 @@
 							<h5 class="m-b30 text-white">Páginas</h5>
 							<ul>
 								<li><a href="index.html">Home</a></li>
+								<li><a href="map.html">Mapa</a></li>
 								<li><a href="blog.html">Blog</a></li>
 								<li><a href="privacy-policy.html">Política de Privacidade</a></li>
 							</ul>

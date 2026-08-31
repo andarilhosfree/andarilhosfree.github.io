@@ -1,84 +1,109 @@
 (function () {
 	'use strict';
 
+	var PAGE_SIZE = 12;
+
+	var lastDoc = null;
+	var loadingMore = false;
+
 	function setVisible(el, visible) {
 		if (!el) return;
 		el.classList.toggle('d-none', !visible);
 	}
 
-	function renderPostCard(doc, index) {
-		var data = doc.data();
-		var slug = data.slug || doc.id;
-		var href = 'blog-post.html?slug=' + encodeURIComponent(slug);
-		var date = window.BlogCommon.formatPostDate(data.createdAt);
-		var title = window.BlogCommon.escapeHtml(data.title || 'Sem título');
-		var excerpt = window.BlogCommon.escapeHtml(data.excerpt || '');
-		var author = window.BlogCommon.escapeHtml(data.authorName || 'Andarilhos Free');
-		var cover = window.BlogCommon.escapeHtml(window.BlogCommon.coverForIndex(index, data.coverUrl));
-
-		return (
-			'<div class="col-lg-4 col-md-6 col-sm-12 m-b30">' +
-			'<div class="blog-post blog-grid blog-rounded blog-effect1">' +
-			'<div class="dlab-post-media dlab-img-effect">' +
-			'<a href="' + href + '"><img src="' + cover + '" alt="' + title + '"></a>' +
-			'</div>' +
-			'<div class="dlab-info p-a20 border-1">' +
-			'<div class="dlab-post-meta">' +
-			'<ul>' +
-			'<li class="post-date"><strong>' + date.day + ' ' + date.month + '</strong> <span>' + date.year + '</span></li>' +
-			'<li class="post-author">Por <span>' + author + '</span></li>' +
-			'</ul>' +
-			'</div>' +
-			'<div class="dlab-post-title">' +
-			'<h4 class="post-title"><a href="' + href + '">' + title + '</a></h4>' +
-			'</div>' +
-			(excerpt ? '<div class="dlab-post-text"><p>' + excerpt + '</p></div>' : '') +
-			'<div class="dlab-post-readmore">' +
-			'<a href="' + href + '" title="Leia mais" rel="bookmark" class="site-button-link">Leia mais</a>' +
-			'</div>' +
-			'</div></div></div>'
-		);
+	function setLoadMoreLoading(loading) {
+		var btn = document.getElementById('blogPostsLoadMore');
+		var loadingEl = document.getElementById('blogPostsLoadMoreLoading');
+		if (btn) btn.disabled = loading;
+		if (loadingEl) setVisible(loadingEl, loading);
 	}
 
-	function initBlogList() {
+	function updateLoadMore(hasMore) {
+		var wrap = document.getElementById('blogPostsLoadMoreWrap');
+		if (!wrap) return;
+		setVisible(wrap, hasMore);
+	}
+
+	function appendPosts(listEl, docs) {
+		var html = '';
+		docs.forEach(function (doc) {
+			html += window.BlogCommon.renderPostCard(doc);
+		});
+		listEl.insertAdjacentHTML('beforeend', html);
+	}
+
+	function handleFetchError(err, errorEl) {
+		setVisible(errorEl, true);
+		if (errorEl) {
+			var msg = (err && err.message) || 'Não foi possível carregar os posts.';
+			if (err && err.code === 'failed-precondition') {
+				msg = window.BlogCommon.indexErrorMessage();
+			}
+			errorEl.textContent = msg;
+		}
+	}
+
+	function loadPage(isInitial) {
 		var listEl = document.getElementById('blogPostsList');
 		var loadingEl = document.getElementById('blogPostsLoading');
 		var emptyEl = document.getElementById('blogPostsEmpty');
 		var errorEl = document.getElementById('blogPostsError');
 
-		if (!listEl) return;
+		if (!listEl) return Promise.resolve();
 
-		setVisible(loadingEl, true);
-		setVisible(emptyEl, false);
-		setVisible(errorEl, false);
-		listEl.innerHTML = '';
+		if (isInitial) {
+			setVisible(loadingEl, true);
+			setVisible(emptyEl, false);
+			setVisible(errorEl, false);
+			setVisible(document.getElementById('blogPostsLoadMoreWrap'), false);
+			listEl.innerHTML = '';
+			lastDoc = null;
+		} else {
+			if (loadingMore || !lastDoc) return Promise.resolve();
+			loadingMore = true;
+			setLoadMoreLoading(true);
+		}
 
-		window.BlogCommon.fetchPublishedPosts(24)
-			.then(function (snapshot) {
-				setVisible(loadingEl, false);
-				if (snapshot.empty) {
-					setVisible(emptyEl, true);
-					return;
+		return window.BlogCommon.fetchPublishedPostsPage({
+			pageSize: PAGE_SIZE,
+			afterDoc: isInitial ? null : lastDoc
+		})
+			.then(function (page) {
+				if (isInitial) {
+					setVisible(loadingEl, false);
+					if (page.empty) {
+						setVisible(emptyEl, true);
+						updateLoadMore(false);
+						return;
+					}
 				}
-				var html = '';
-				var index = 0;
-				snapshot.forEach(function (doc) {
-					html += renderPostCard(doc, index);
-					index += 1;
-				});
-				listEl.innerHTML = html;
+
+				appendPosts(listEl, page.docs);
+				lastDoc = page.lastDoc;
+				updateLoadMore(page.hasMore);
 			})
 			.catch(function (err) {
-				setVisible(loadingEl, false);
-				setVisible(errorEl, true);
-				if (errorEl) {
-					var msg = (err && err.message) || 'Não foi possível carregar os posts.';
-					if (err && err.code === 'failed-precondition') {
-						msg = window.BlogCommon.indexErrorMessage();
-					}
-					errorEl.textContent = msg;
+				if (isInitial) {
+					setVisible(loadingEl, false);
+				}
+				handleFetchError(err, errorEl);
+			})
+			.finally(function () {
+				if (!isInitial) {
+					loadingMore = false;
+					setLoadMoreLoading(false);
 				}
 			});
+	}
+
+	function initBlogList() {
+		var loadMoreBtn = document.getElementById('blogPostsLoadMore');
+		if (loadMoreBtn) {
+			loadMoreBtn.addEventListener('click', function () {
+				loadPage(false);
+			});
+		}
+		loadPage(true);
 	}
 
 	if (document.readyState === 'loading') {

@@ -3,6 +3,8 @@
 
 	var quill = null;
 	var editingPostId = null;
+	var editingPostAuthorUid = null;
+	var editingPostAuthorName = null;
 	var currentUser = null;
 	var formInitialized = false;
 
@@ -58,6 +60,81 @@
 		}
 	}
 
+	function updateCoverPreview(url) {
+		var previewWrap = document.getElementById('blogCreateCoverPreviewWrap');
+		var previewImg = document.getElementById('blogCreateCoverPreview');
+		var clearBtn = document.getElementById('blogCreateCoverClear');
+		var value = (url || '').trim();
+		if (previewImg && previewWrap) {
+			if (value) {
+				previewImg.src = value;
+				setVisible(previewWrap, true);
+			} else {
+				previewImg.removeAttribute('src');
+				setVisible(previewWrap, false);
+			}
+		}
+		setVisible(clearBtn, Boolean(value));
+	}
+
+	function initCoverUpload() {
+		var fileInput = document.getElementById('blogCreateCoverFile');
+		var pickBtn = document.getElementById('blogCreateCoverPick');
+		var clearBtn = document.getElementById('blogCreateCoverClear');
+		var coverUrlEl = document.getElementById('blogCreateCoverUrl');
+
+		if (pickBtn && fileInput) {
+			pickBtn.addEventListener('click', function () {
+				fileInput.click();
+			});
+		}
+
+		if (fileInput) {
+			fileInput.addEventListener('change', function () {
+				var file = fileInput.files && fileInput.files[0];
+				fileInput.value = '';
+				if (!file) return;
+
+				if (!window.ImgbbUpload) {
+					setStatus('Upload de imagem indisponível.', true);
+					return;
+				}
+
+				setStatus('Enviando capa…', false);
+				if (pickBtn) pickBtn.disabled = true;
+
+				window.ImgbbUpload.uploadImage(file)
+					.then(function (url) {
+						if (coverUrlEl) coverUrlEl.value = url;
+						updateCoverPreview(url);
+						setStatus('Capa enviada.', false);
+					})
+					.catch(function (e) {
+						setStatus((e && e.message) || 'Erro ao enviar capa.', true);
+					})
+					.finally(function () {
+						if (pickBtn) pickBtn.disabled = false;
+					});
+			});
+		}
+
+		if (clearBtn) {
+			clearBtn.addEventListener('click', function () {
+				if (coverUrlEl) coverUrlEl.value = '';
+				updateCoverPreview('');
+			});
+		}
+
+		if (coverUrlEl) {
+			coverUrlEl.addEventListener('change', function () {
+				updateCoverPreview(coverUrlEl.value);
+			});
+			coverUrlEl.addEventListener('blur', function () {
+				updateCoverPreview(coverUrlEl.value);
+			});
+		}
+	}
+
 	function fillForm(data) {
 		var titleEl = document.getElementById('blogCreateTitle');
 		var slugEl = document.getElementById('blogCreateSlug');
@@ -67,6 +144,7 @@
 		if (slugEl) slugEl.value = data.slug || '';
 		if (excerptEl) excerptEl.value = data.excerpt || '';
 		if (coverEl) coverEl.value = data.coverUrl || '';
+		updateCoverPreview(data.coverUrl || '');
 		if (quill) {
 			quill.root.innerHTML = data.contentHtml || '';
 		}
@@ -185,8 +263,14 @@
 		loadPublishedList();
 	}
 
+	function canUseBlogEditor(member) {
+		return window.AndarilhosAuth.hasPermission(member, 'blog')
+			|| window.AndarilhosAuth.isAdmin(member);
+	}
+
 	function savePost(status) {
-		if (!currentUser || !window.AndarilhosAuth.hasPermission(window.AndarilhosAuth.getCachedMember(), 'blog')) {
+		var member = window.AndarilhosAuth.getCachedMember();
+		if (!currentUser || !canUseBlogEditor(member)) {
 			setStatus('Sem permissão para publicar.', true);
 			return Promise.resolve();
 		}
@@ -214,6 +298,11 @@
 			status: status,
 			updatedAt: firebase.firestore.FieldValue.serverTimestamp()
 		};
+
+		if (editingPostId && editingPostAuthorUid && editingPostAuthorUid !== currentUser.uid) {
+			payload.authorUid = editingPostAuthorUid;
+			payload.authorName = editingPostAuthorName || payload.authorName;
+		}
 
 		setStatus('Salvando…', false);
 		var publishBtn = document.getElementById('blogCreatePublish');
@@ -272,16 +361,18 @@
 			});
 	}
 
-	function loadPostForEdit(postId, user) {
+	function loadPostForEdit(postId, user, member) {
 		return window.BlogCommon.fetchPostById(postId).then(function (snap) {
 			if (!snap.exists) {
 				throw new Error('Post não encontrado.');
 			}
 			var data = snap.data();
-			if (data.authorUid !== user.uid) {
+			if (data.authorUid !== user.uid && !window.AndarilhosAuth.isAdmin(member)) {
 				throw new Error('Você só pode editar seus próprios posts.');
 			}
 			editingPostId = postId;
+			editingPostAuthorUid = data.authorUid || null;
+			editingPostAuthorName = data.authorName || null;
 			fillForm(data);
 			refreshPostLists();
 		});
@@ -308,12 +399,14 @@
 		if (!user) {
 			formInitialized = false;
 			editingPostId = null;
+			editingPostAuthorUid = null;
+			editingPostAuthorName = null;
 			currentUser = null;
 			showGate('login');
 			return;
 		}
 
-		if (!window.AndarilhosAuth.hasPermission(member, 'blog')) {
+		if (!window.AndarilhosAuth.hasPermission(member, 'blog') && !window.AndarilhosAuth.isAdmin(member)) {
 			formInitialized = false;
 			currentUser = null;
 			showGate('permission');
@@ -329,13 +422,15 @@
 			formInitialized = true;
 			var postId = getPostIdFromUrl();
 			if (postId) {
-				loadPostForEdit(postId, user).catch(function (e) {
+				loadPostForEdit(postId, user, member).catch(function (e) {
 					setStatus((e && e.message) || 'Erro ao carregar post.', true);
 					fillForm({});
 					refreshPostLists();
 				});
 			} else {
 				editingPostId = null;
+				editingPostAuthorUid = null;
+				editingPostAuthorName = null;
 				fillForm({});
 				refreshPostLists();
 			}
@@ -364,6 +459,7 @@
 			savePost('draft');
 		});
 		document.getElementById('blogCreateDelete').addEventListener('click', deletePost);
+		initCoverUpload();
 
 		if (!window.AndarilhosAuth.isConfigured()) {
 			setVisible(document.getElementById('blogCreateLoading'), false);

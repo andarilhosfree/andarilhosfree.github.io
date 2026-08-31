@@ -109,30 +109,85 @@
 }
 
 @media (max-width: 991px) {
+	.header-nav .nav > li.blog-auth-nav {
+		display: block !important;
+		width: 100%;
+		float: none;
+	}
+
 	.blog-auth-nav--account,
 	.blog-auth-nav--cta {
 		margin-left: 0;
-		padding: 12px 0;
+		padding: 0;
 		border-left: 0;
 		min-width: 0;
 		width: 100%;
+	}
+
+	.header-nav .nav > li.blog-auth-nav > a.blog-auth-nav__login-link {
+		display: block !important;
+		width: 100%;
+		padding: 12px 15px !important;
+		border-top: 1px solid #e9e9e9;
+		font-size: 15px;
+		font-weight: 600;
+		text-transform: uppercase;
+		color: #333 !important;
+		background: #fff;
+	}
+
+	.header-nav .nav > li.blog-auth-nav > a.blog-auth-nav__login-link:hover {
+		color: #111 !important;
+		background: #f0f0f0;
 	}
 
 	.blog-auth-nav--account > a,
 	.blog-auth-nav__account {
 		align-items: flex-start;
 		text-align: left;
-		width: auto;
+		width: 100%;
 		min-width: 0;
+		padding: 12px 15px;
+		border-top: 1px solid #e9e9e9;
+		background: #fff;
+		box-sizing: border-box;
 	}
 
-	.blog-auth-nav__name {
+	.header-nav .nav > li.blog-auth-nav .blog-auth-nav__name {
+		color: #222 !important;
 		white-space: normal;
 		word-break: break-word;
 	}
 
+	.header-nav .nav > li.blog-auth-nav .blog-auth-nav__logout {
+		color: #666 !important;
+		margin-top: 4px;
+	}
+
+	.header-nav .nav > li.blog-auth-nav .blog-auth-nav__logout:hover {
+		color: #111 !important;
+	}
+
+	.header-nav .nav > li.blog-auth-nav--cta {
+		padding: 12px 15px;
+		border-top: 1px solid #e9e9e9;
+		background: #fff;
+		box-sizing: border-box;
+	}
+
 	.blog-auth-nav__cta {
 		display: inline-block;
-		margin-top: 4px;
+		margin-top: 0;
+	}
+
+	/* Transparent header uses white link text on desktop; mobile menu is white bg */
+	.header-transparent .header-nav .nav > li.blog-auth-nav > a.blog-auth-nav__login-link,
+	.header-transparent .header-nav .nav > li.blog-auth-nav .blog-auth-nav__name,
+	.header-transparent .header-nav .nav > li.blog-auth-nav .blog-auth-nav__logout {
+		color: #333 !important;
+	}
+
+	.header-transparent .header-nav .nav > li.blog-auth-nav .blog-auth-nav__logout {
+		color: #666 !important;
 	}
 }

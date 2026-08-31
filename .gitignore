@@ -4,6 +4,7 @@
 
 # Generated at build/deploy (CI secrets or local .env)
 js/firebase-config.js
+js/imgbb-config.js
 
 # Python / tooling artifacts
 __pycache__/
