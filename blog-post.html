@@ -8,10 +8,10 @@
 	<meta name="author" content="" />
 	<meta name="robots" content="" />
 	<meta name="description"
-		content="Blog da comunidade Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
+		content="Publicação do blog Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
 	<meta property="og:title" content="Blog | Andarilhos das Terras Livres" />
 	<meta property="og:description"
-		content="Blog da comunidade Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
+		content="Publicação do blog Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
 	<meta property="og:image" content="images/ogimage.png" />
 	<meta name="format-detection" content="telephone=no">
 
@@ -19,7 +19,7 @@
 	<link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 	<link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
 
-	<title>Blog | Andarilhos das Terras Livres</title>
+	<title>Publicação | Andarilhos das Terras Livres</title>
 
 	<!-- MOBILE SPECIFIC -->
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -83,6 +83,91 @@
 
 		#blogLoginError {
 			min-height: 1.25em;
+		}
+
+
+		.blog-posts-stack {
+			max-width: 900px;
+			margin: 0 auto;
+		}
+
+		.blog-list-card {
+			margin-bottom: 48px;
+		}
+
+		.blog-list-card__media {
+			display: block;
+			overflow: hidden;
+			border-radius: 6px;
+			margin-bottom: 20px;
+		}
+
+		.blog-list-card__media img {
+			width: 100%;
+			height: auto;
+			max-height: 480px;
+			object-fit: cover;
+			display: block;
+			transition: transform 0.3s ease;
+		}
+
+		.blog-list-card__media:hover img {
+			transform: scale(1.02);
+		}
+
+		.blog-list-card__meta {
+			font-size: 14px;
+			color: #888;
+			margin-bottom: 8px;
+		}
+
+		.blog-list-card__title {
+			font-size: 28px;
+			line-height: 1.3;
+			margin: 0 0 12px;
+		}
+
+		.blog-list-card__title a {
+			color: inherit;
+		}
+
+		.blog-list-card__title a:hover {
+			color: #ff2a2a;
+		}
+
+		.blog-list-card__excerpt {
+			font-size: 16px;
+			line-height: 1.6;
+			color: #666;
+			margin-bottom: 16px;
+		}
+
+		.blog-post-cover {
+			margin-bottom: 28px;
+			border-radius: 6px;
+			overflow: hidden;
+		}
+
+		.blog-post-cover img {
+			width: 100%;
+			height: auto;
+			max-height: 520px;
+			object-fit: cover;
+			display: block;
+		}
+
+		.blog-post-body {
+			font-size: 16px;
+			line-height: 1.75;
+		}
+
+		.blog-post-body img {
+			max-width: 100%;
+			height: auto;
+		}
+
+		.blog-post-body iframe {
+			max-width: 100%;
 		}
 
 		.blog-login-modal {
@@ -311,11 +396,12 @@
 				style="background-image:url(images/main-slider/slide1.jpg);">
 				<div class="container">
 					<div class="dlab-bnr-inr-entry">
-						<h1 class="text-white">Blog</h1>
+						<h1 class="text-white" id="blogPostBannerTitle">Publicação</h1>
 						<div class="breadcrumb-row">
 							<ul class="list-inline">
 								<li><a href="index.html">Home</a></li>
-								<li>Blog</li>
+								<li><a href="blog.html">Blog</a></li>
+								<li id="blogPostBreadcrumbTitle">Publicação</li>
 							</ul>
 						</div>
 					</div>
@@ -324,18 +410,26 @@
 			<div class="content-block">
 				<div class="section-full content-inner">
 					<div class="container">
-						<div class="section-head text-center">
-							<h2 class="title">Últimas publicações</h2>
-							<p>Novidades, dicas e conteúdos da comunidade Andarilhos Free.</p>
+						<div id="blogPostLoading" class="text-center p-a40">
+							<p class="font-16 m-b0">Carregando publicação…</p>
 						</div>
-						<div id="blogPostsLoading" class="text-center p-a20">
-							<p class="font-16 m-b0">Carregando publicações…</p>
-						</div>
-						<div id="blogPostsError" class="alert alert-danger d-none" role="alert"></div>
-						<div id="blogPostsEmpty" class="text-center p-a40 d-none">
-							<p class="font-16 m-b0">Nenhuma publicação ainda. Volte em breve!</p>
-						</div>
-						<div id="blogPostsList" class="row"></div>
+						<div id="blogPostError" class="alert alert-danger d-none text-center" role="alert"></div>
+						<article id="blogPostArticle" class="d-none max-w900 m-auto">
+							<div class="blog-post-cover d-none" id="blogPostCoverWrap">
+								<img id="blogPostCover" alt="">
+							</div>
+							<div class="dlab-post-meta m-b20">
+								<ul id="blogPostMeta"></ul>
+							</div>
+							<h2 class="title m-b30" id="blogPostTitle"></h2>
+							<div class="blog-post-body" id="blogPostBody"></div>
+							<div class="m-t30 d-none" id="blogPostEditWrap">
+								<a href="#" id="blogPostEditLink" class="site-button-link">Editar publicação</a>
+							</div>
+							<div class="m-t40 text-center">
+								<a href="blog.html" class="site-button-link">← Voltar ao blog</a>
+							</div>
+						</article>
 					</div>
 				</div>
 				<div class="section-full p-tb80">
@@ -514,7 +608,8 @@
 	<script src="js/site-auth.js"></script>
 	<script src="js/blog-common.js"></script>
 	<script src="js/blog-auth.js"></script>
-	<script src="js/blog-list.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+	<script src="js/blog-post-view.js"></script>
 </body>
 
 </html>

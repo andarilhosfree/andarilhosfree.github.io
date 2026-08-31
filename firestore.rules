@@ -1,0 +1,102 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isActiveMember() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.active == true;
+    }
+
+    function memberHas(permission) {
+      return isActiveMember()
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.permissions[permission] == true;
+    }
+
+    function validCoverUrl(value) {
+      return value == null
+        || (value is string && value.size() <= 2000
+            && (value.matches('^https://[a-zA-Z0-9].*') || value.matches('^images/[a-zA-Z0-9/_.-]+$')));
+    }
+
+    function validPostWrite() {
+      let data = request.resource.data;
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.slug is string
+        && data.slug.size() > 0
+        && data.slug.size() <= 80
+        && data.contentHtml is string
+        && data.contentHtml.size() > 0
+        && data.contentHtml.size() <= 500000
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && data.status in ['draft', 'published']
+        && data.authorUid == request.auth.uid
+        && data.createdAt == request.time
+        && data.updatedAt == request.time
+        && (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() <= 500))
+        && validCoverUrl(data.get('coverUrl', null));
+    }
+
+    function validPostUpdate() {
+      let data = request.resource.data;
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.slug is string
+        && data.slug.size() > 0
+        && data.slug.size() <= 80
+        && data.contentHtml is string
+        && data.contentHtml.size() > 0
+        && data.contentHtml.size() <= 500000
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && data.status in ['draft', 'published']
+        && data.authorUid == resource.data.authorUid
+        && data.authorUid == request.auth.uid
+        && data.createdAt == resource.data.createdAt
+        && data.updatedAt == request.time
+        && (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() <= 500))
+        && validCoverUrl(data.get('coverUrl', null));
+    }
+
+    match /members/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && !exists(/databases/$(database)/documents/members/$(uid))
+        && request.resource.data.active == true
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.permissions.mapComments == true
+        && request.resource.data.permissions.blog == false
+        && request.resource.data.keys().hasAll(['active', 'email', 'displayName', 'permissions', 'createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.permissions.keys().hasOnly(['blog', 'mapComments'])
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.authorUid == request.auth.uid);
+      allow create: if memberHas('blog') && validPostWrite();
+      allow update: if memberHas('blog') && validPostUpdate();
+      allow delete: if memberHas('blog')
+        && resource.data.authorUid == request.auth.uid;
+    }
+
+    match /mapComments/{commentId} {
+      allow read: if true;
+      allow create: if memberHas('mapComments')
+        && request.resource.data.authorUid == request.auth.uid;
+      allow update, delete: if memberHas('mapComments')
+        && resource.data.authorUid == request.auth.uid;
+    }
+  }
+}
