@@ -11,7 +11,6 @@
     var charactersApiUrl = 'https://script.google.com/macros/s/AKfycbyhDUdN2CYmLAeFkzadd1Be3n8jCZEg8HN1LeEqodVVzHO8Y5df014aYpopMO-_oKeT/exec';
     var uploadApiUrl = charactersApiUrl;
     var spriteUpdateWebAppUrl = 'https://script.google.com/macros/s/AKfycbx1JeyObkZwAOw-eFksB90Xky4B09BGtj8MlOKdK04ZE0CV76X57-dpBZgezZtKVDgz/exec';
-    var imgbbApiKey = '4bcd2691cf719e87b29a5d28e7077918';
     var fetchTimeoutMs = 12000;
     var csvPath = 'ANDARILHOS FREE ACCOUNT - Página1.csv';
     var initialVisibleCount = 6;
@@ -318,35 +317,10 @@
     }
 
     function uploadToImgBB(imageFile) {
-        if (!imgbbApiKey) {
-            return Promise.reject(new Error('ImgBB API key não configurada.'));
+        if (!window.ImgbbUpload || typeof window.ImgbbUpload.uploadImage !== 'function') {
+            return Promise.reject(new Error('Upload de imagem indisponível nesta página.'));
         }
-
-        var formData = new FormData();
-        formData.append('key', imgbbApiKey);
-        formData.append('image', imageFile);
-
-        return fetchWithTimeout('https://api.imgbb.com/1/upload', {
-            method: 'POST',
-            body: formData
-        }, fetchTimeoutMs)
-            .then(function (response) {
-                if (!response.ok) {
-                    throw new Error('Falha no upload para o ImgBB');
-                }
-
-                return parseJsonResponse(response);
-            })
-            .then(function (data) {
-                if (data && data.success && data.data && data.data.url) {
-                    return data.data.url;
-                }
-
-                var message = (data && data.error && data.error.message)
-                    ? data.error.message
-                    : 'Erro desconhecido';
-                throw new Error('Falha no upload para o ImgBB: ' + message);
-            });
+        return window.ImgbbUpload.uploadImage(imageFile);
     }
 
     function submitSpriteUrlViaTransport(characterName, spriteUrl) {

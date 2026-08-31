@@ -814,6 +814,14 @@
                     scrollLocked: false
                 };
 
+                function isMobileMapUi() {
+                    return window.matchMedia('(max-width: 767.98px)').matches;
+                }
+
+                function getMapSectionEl() {
+                    return document.getElementById('map-content') || state.map.getContainer();
+                }
+
                 function setHandlerEnabled(handler, enabled) {
                     if (!handler) return;
                     var fn = enabled ? handler.enable : handler.disable;
@@ -890,23 +898,38 @@
                 }
 
                 function getFixedHeaderHeight() {
-                    // The sticky header implementation toggles fixed positioning dynamically.
-                    // Detect the actual fixed bar by reading computed styles.
                     var mainBar = document.querySelector('.main-bar');
-                    if (!mainBar) return 0;
-                    var style = window.getComputedStyle(mainBar);
-                    if (style.position !== 'fixed') return 0;
-                    var rect = mainBar.getBoundingClientRect();
-                    return rect && rect.height ? rect.height : 0;
+                    if (mainBar) {
+                        var style = window.getComputedStyle(mainBar);
+                        if (style.position === 'fixed') {
+                            var fixedRect = mainBar.getBoundingClientRect();
+                            if (fixedRect && fixedRect.height) {
+                                return fixedRect.height;
+                            }
+                        }
+                        var barRect = mainBar.getBoundingClientRect();
+                        if (barRect && barRect.height) {
+                            return barRect.height;
+                        }
+                    }
+                    var header = document.querySelector('.site-header');
+                    if (header) {
+                        var headerRect = header.getBoundingClientRect();
+                        if (headerRect && headerRect.height) {
+                            return headerRect.height;
+                        }
+                    }
+                    return 0;
                 }
 
                 function scrollMapIntoViewIfNeeded() {
-                    // Scroll only the map block into view — never jump to the page footer.
-                    var mapSection = document.getElementById('map-content') || state.map.getContainer();
-                    var epsilonPx = 2;
-                    var extraGapPx = 12;
-                    var maxWaitMs = 1800;
-                    var maxAdjustments = 4;
+                    var mapSection = getMapSectionEl();
+                    var mobile = isMobileMapUi();
+                    var epsilonPx = mobile ? 4 : 2;
+                    var extraGapPx = mobile ? 8 : 12;
+                    var maxWaitMs = mobile ? 900 : 1800;
+                    var maxAdjustments = mobile ? 6 : 4;
+                    var scrollBehavior = mobile ? 'auto' : 'smooth';
                     var adjustments = 0;
 
                     var maxScrollY = function () {
@@ -930,7 +953,7 @@
                         // Clamp so we cannot overshoot into the footer.
                         var mapBottomLimit = window.scrollY + mapSection.getBoundingClientRect().bottom - window.innerHeight;
                         targetScrollY = Math.max(0, Math.min(targetScrollY, maxScrollY(), Math.max(0, mapBottomLimit)));
-                        window.scrollTo({ top: targetScrollY, behavior: 'smooth' });
+                        window.scrollTo({ top: targetScrollY, left: 0, behavior: scrollBehavior });
                         adjustments += 1;
                     };
 
@@ -1034,6 +1057,13 @@
                     state.overlay = nextOverlay;
                     syncFloorControl();
                     updateCreatureMarkers();
+                    floorChangeListeners.forEach(function (fn) {
+                        try {
+                            fn(state.z);
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
                 }
 
                 function stepFloor(delta) {
@@ -1110,6 +1140,32 @@
                     updateCreatureMarkers();
                 });
 
+                function unlockMapInteraction() {
+                    if (interaction.unlockInProgress || !interaction.locked) return;
+                    interaction.unlockInProgress = true;
+
+                    scrollMapIntoViewIfNeeded()
+                        .then(function () {
+                            setPageScrollLocked(true);
+                            setInteractionLocked(false);
+                            state.map.invalidateSize();
+                            window.requestAnimationFrame(function () {
+                                state.map.invalidateSize();
+                            });
+                        })
+                        .finally(function () {
+                            interaction.unlockInProgress = false;
+                        });
+                }
+
+                function isModalUiTarget(target) {
+                    if (!target || !target.closest) return false;
+                    return Boolean(
+                        target.closest('.modal') ||
+                        target.closest('.modal-backdrop')
+                    );
+                }
+
                 (function addInteractionOverlay() {
                     var container = state.map.getContainer();
                     var overlay = document.createElement('div');
@@ -1125,28 +1181,28 @@
                     overlay.addEventListener('pointerdown', function (e) {
                         e.preventDefault();
                         e.stopPropagation();
-
-                        if (interaction.unlockInProgress) return;
-                        interaction.unlockInProgress = true;
-
-                        // Align map under the sticky header, then freeze page scroll so
-                        // zoom/pan cannot push controls off-screen.
-                        scrollMapIntoViewIfNeeded()
-                            .then(function () {
-                                setPageScrollLocked(true);
-                                setInteractionLocked(false);
-                                state.map.invalidateSize();
-                            })
-                            .finally(function () {
-                                interaction.unlockInProgress = false;
-                            });
+                        unlockMapInteraction();
                     });
+
+                    var mapSection = getMapSectionEl();
+                    if (mapSection) {
+                        mapSection.addEventListener('pointerdown', function (e) {
+                            if (!interaction.locked || interaction.unlockInProgress) return;
+                            if (interaction.overlayEl && interaction.overlayEl.contains(e.target)) return;
+                            if (e.target && e.target.closest && e.target.closest('.tibia-creature-panel')) return;
+                            if (!container.contains(e.target)) return;
+                            e.preventDefault();
+                            e.stopPropagation();
+                            unlockMapInteraction();
+                        });
+                    }
 
                     // Initial state: locked so the page can scroll.
                     setInteractionLocked(true);
 
                     document.addEventListener('pointerdown', function (e) {
                         if (!interaction.locked && !container.contains(e.target)) {
+                            if (isModalUiTarget(e.target)) return;
                             setInteractionLocked(true);
                         }
                     }, true);
@@ -1155,6 +1211,8 @@
                         if (!e) return;
                         var key = e.key || e.keyCode;
                         if (key !== 'Escape' && key !== 27) return;
+
+                        if (document.querySelector('.modal.show')) return;
 
                         // Close suggestions first if the creature search is open.
                         if (creatureUi.suggestionsEl && !creatureUi.suggestionsEl.hidden) {
@@ -1172,6 +1230,11 @@
                     });
                 })();
 
+                var floorChangeListeners = [];
+                var plusClickHandlers = [];
+                var readyCallbacks = [];
+                var mapReady = false;
+
                 function createPointMarkerIcon() {
                     // Classic Leaflet pin (2x asset), rendered larger, with a side "+" action.
                     var pinUrl = 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png';
@@ -1181,10 +1244,20 @@
                             '<img class="tibia-point-marker__pin-img" src="' + pinUrl +
                             '" width="37" height="61" alt="" draggable="false" />' +
                             '<button type="button" class="tibia-point-marker__plus" aria-label="Adicionar comentário">+</button>' +
-                            '<span class="tibia-point-marker__comment">Adicionar comentário</span>',
+                            '<button type="button" class="tibia-point-marker__comment">Adicionar comentário</button>',
                         iconSize: [64, 61],
                         // Tip of the default pin.
                         iconAnchor: [18, 61]
+                    });
+                }
+
+                function firePointMarkerCommentClick() {
+                    plusClickHandlers.forEach(function (fn) {
+                        try {
+                            fn();
+                        } catch (err) {
+                            console.error(err);
+                        }
                     });
                 }
 
@@ -1195,18 +1268,23 @@
                     marker.on('add', function () {
                         var el = marker.getElement();
                         if (!el) return;
-                        var plusBtn = el.querySelector('.tibia-point-marker__plus');
-                        if (!plusBtn || plusBtn._tibiaBound) return;
-                        plusBtn._tibiaBound = true;
-                        plusBtn.addEventListener('click', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            // Placeholder: comment action comes later.
-                        });
-                        plusBtn.addEventListener('mousedown', function (e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        });
+
+                        function bindCommentTrigger(node) {
+                            if (!node || node._tibiaBound) return;
+                            node._tibiaBound = true;
+                            node.addEventListener('click', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                firePointMarkerCommentClick();
+                            });
+                            node.addEventListener('mousedown', function (e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            });
+                        }
+
+                        bindCommentTrigger(el.querySelector('.tibia-point-marker__plus'));
+                        bindCommentTrigger(el.querySelector('.tibia-point-marker__comment'));
                     });
                 }
 
@@ -1284,6 +1362,61 @@
 
                 window.addEventListener('resize', function () {
                     state.map.invalidateSize();
+                });
+
+                window.TibiaMapApi = {
+                    whenReady: function (cb) {
+                        if (typeof cb !== 'function') return;
+                        if (mapReady) {
+                            cb();
+                        } else {
+                            readyCallbacks.push(cb);
+                        }
+                    },
+                    onFloorChange: function (fn) {
+                        if (typeof fn === 'function') {
+                            floorChangeListeners.push(fn);
+                        }
+                    },
+                    onPointMarkerPlusClick: function (fn) {
+                        if (typeof fn === 'function') {
+                            plusClickHandlers.push(fn);
+                        }
+                    },
+                    getBounds: function () {
+                        return state.bounds;
+                    },
+                    getZ: function () {
+                        return state.z;
+                    },
+                    getMap: function () {
+                        return state.map;
+                    },
+                    toPixelFromWorld: function (worldX, worldY) {
+                        return toPixelFromWorld(state.bounds, worldX, worldY);
+                    },
+                    toWorldFromPixel: function (pixelX, pixelY) {
+                        return toWorldFromPixel(state.bounds, pixelX, pixelY);
+                    },
+                    getPointMarkerLatLng: function () {
+                        if (!state.marker) return null;
+                        return state.marker.getLatLng();
+                    },
+                    getSelectedCreatureNames: function () {
+                        if (!creatureState.selectedKeys.length) return [];
+                        return creatureState.selectedKeys.map(function (key) {
+                            return creatureState.nameByKey[key] || key;
+                        });
+                    }
+                };
+
+                mapReady = true;
+                readyCallbacks.splice(0).forEach(function (cb) {
+                    try {
+                        cb();
+                    } catch (err) {
+                        console.error(err);
+                    }
                 });
             })
             .catch(function (err) {

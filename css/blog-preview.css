@@ -1,0 +1,68 @@
+/* Blog preview widget — consistent white section + spacing on all pages */
+
+.blog-preview-block {
+	background-color: #fff;
+}
+
+.blog-preview-block .content-inner,
+.blog-preview-block.content-inner {
+	padding-top: 60px;
+	padding-bottom: 60px;
+}
+
+.blog-preview-block .section-head {
+	margin-bottom: 32px;
+}
+
+.blog-preview-block .section-head .title {
+	color: #222;
+}
+
+.blog-preview-block .section-head p {
+	color: #494949;
+}
+
+.blog-preview-block #blogPreviewLoading,
+.blog-preview-block #blogPreviewEmpty {
+	padding: 8px 0 12px;
+}
+
+.blog-preview-block #blogPreviewLoading p,
+.blog-preview-block #blogPreviewEmpty p {
+	margin-bottom: 0;
+	color: #666;
+}
+
+.blog-preview-block #blogPreviewList:empty {
+	display: none;
+	margin: 0;
+	padding: 0;
+	min-height: 0;
+}
+
+	.blog-preview-block .blog-preview__cta {
+		margin-top: 28px;
+		margin-bottom: 0;
+	}
+
+/* Blog listing — load more */
+.blog-posts-load-more {
+	padding-bottom: 10px;
+}
+
+.blog-posts-load-more button:disabled {
+	opacity: 0.65;
+	cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+	.blog-preview-block .content-inner,
+	.blog-preview-block.content-inner {
+		padding-top: 50px;
+		padding-bottom: 50px;
+	}
+
+	.blog-preview-block .section-head {
+		margin-bottom: 24px;
+	}
+}

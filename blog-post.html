@@ -8,10 +8,10 @@
 	<meta name="author" content="" />
 	<meta name="robots" content="" />
 	<meta name="description"
-		content="Política de privacidade do site Andarilhos das Terras Livres — comunidade Tibia free." />
-	<meta property="og:title" content="Política de Privacidade | Andarilhos das Terras Livres" />
+		content="Publicação do blog Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
+	<meta property="og:title" content="Blog | Andarilhos das Terras Livres" />
 	<meta property="og:description"
-		content="Política de privacidade do site Andarilhos das Terras Livres — comunidade Tibia free." />
+		content="Publicação do blog Andarilhos das Terras Livres — dicas, novidades e conteúdo Tibia free." />
 	<meta property="og:image" content="images/ogimage.png" />
 	<meta name="format-detection" content="telephone=no">
 
@@ -19,7 +19,7 @@
 	<link rel="icon" href="images/favicon.ico" type="image/x-icon" />
 	<link rel="shortcut icon" type="image/x-icon" href="images/favicon.png" />
 
-	<title>Política de Privacidade | Andarilhos das Terras Livres</title>
+	<title>Publicação | Andarilhos das Terras Livres</title>
 
 	<!-- MOBILE SPECIFIC -->
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -32,32 +32,13 @@
 	<!-- STYLESHEETS -->
 	<link rel="stylesheet" type="text/css" href="css/plugins.css">
 	<link rel="stylesheet" type="text/css" href="css/style.css">
-	<link rel="stylesheet" type="text/css" href="css/blog-preview.css">
 	<link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
 	<link rel="stylesheet" type="text/css" href="css/templete.css">
+	<link rel="stylesheet" type="text/css" href="css/blog-auth-nav.css">
+	<link rel="stylesheet" type="text/css" href="css/blog-preview.css">
 	<style>
 		html {
 			scroll-behavior: smooth;
-		}
-
-		.banner-blur-overlay {
-			position: relative;
-			overflow: hidden;
-		}
-
-		.banner-blur-overlay::before {
-			content: "";
-			position: absolute;
-			inset: 0;
-			background: rgba(0, 0, 0, 0.1);
-			backdrop-filter: blur(2px);
-			-webkit-backdrop-filter: blur(2px);
-			z-index: 1;
-		}
-
-		.banner-blur-overlay .container {
-			position: relative;
-			z-index: 2;
 		}
 
 		.partner-list .partner-item {
@@ -97,106 +78,226 @@
 			color: #fff;
 		}
 
-		.other-job-list .title-head {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-			flex-wrap: wrap;
+		.blog-auth-nav a {
+			cursor: pointer;
 		}
 
-		.other-job-list .title-head .site-button {
-			margin: 0;
-			vertical-align: middle;
+		#blogLoginError {
+			min-height: 1.25em;
 		}
 
-		.other-job-list .title-head .vocation-druid {
-			background: #2eaf63;
-			border-color: #2eaf63;
-			color: #fff;
-		}
 
-		.other-job-list .title-head .vocation-monk {
-			background: #7a4bd1;
-			border-color: #7a4bd1;
-			color: #fff;
-		}
-
-		.other-job-list .title-head .vocation-paladin {
-			background: #f3c43f;
-			border-color: #f3c43f;
-			color: #222;
-		}
-
-		.other-job-list .title-head .vocation-sorcerer {
-			background: #d74c4c;
-			border-color: #d74c4c;
-			color: #fff;
-		}
-
-		.other-job-list .title-head .vocation-knight {
-			background: #4d4d4d;
-			border-color: #4d4d4d;
-			color: #fff;
-		}
-
-		.character-filter-tabs {
-			text-align: left;
-		}
-
-		.character-filter-tabs .nav-tabs {
-			justify-content: flex-start;
-		}
-
-		.character-filter-tabs .tab-content {
-			padding: 18px 24px 14px;
-			border: 1px solid #d9d9d9;
-			border-radius: 0 12px 12px 12px;
-		}
-
-		.character-filter-tabs .tab-pane .row.sp10 {
-			display: flex;
-			justify-content: center;
-			align-items: center;
-		}
-
-		.character-filter-tabs .tab-pane .row.sp10>div {
-			flex: 0 0 26% !important;
-			max-width: 26% !important;
-		}
-
-		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
-			flex: 0 0 20.8% !important;
-			max-width: 20.8% !important;
-		}
-
-		.character-filter-tabs .tab-pane input.form-control,
-		.character-filter-tabs .tab-pane select,
-		.character-filter-tabs .tab-pane .site-button.btn-block {
-			width: 100%;
-			max-width: 100%;
+		.blog-posts-stack {
+			max-width: 900px;
 			margin: 0 auto;
 		}
 
-		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow input.form-control,
-		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow select,
-		.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow .bootstrap-select {
-			width: 80% !important;
-			max-width: 80% !important;
-			margin: 0 auto !important;
+		.blog-list-card {
+			margin-bottom: 48px;
 		}
 
-		.character-filter-tabs .site-button.btn-block {
-			height: 48px;
-			line-height: 48px;
-			padding: 0 20px;
-			border: 1px solid #d9d9d9 !important;
-			border-radius: 8px;
-			box-shadow: none;
+		.blog-list-card__media {
+			display: block;
+			overflow: hidden;
+			border-radius: 6px;
+			margin-bottom: 20px;
 		}
 
-		.tab-content.bg-white {
-			border-radius: 0px 10px 10px 10px;
-			padding: 0px 12px;
+		.blog-list-card__media img {
+			width: 100%;
+			height: auto;
+			max-height: 480px;
+			object-fit: cover;
+			display: block;
+			transition: transform 0.3s ease;
+		}
+
+		.blog-list-card__media:hover img {
+			transform: scale(1.02);
+		}
+
+		.blog-list-card__meta {
+			font-size: 14px;
+			color: #888;
+			margin-bottom: 8px;
+		}
+
+		.blog-list-card__title {
+			font-size: 28px;
+			line-height: 1.3;
+			margin: 0 0 12px;
+		}
+
+		.blog-list-card__title a {
+			color: inherit;
+		}
+
+		.blog-list-card__title a:hover {
+			color: #ff2a2a;
+		}
+
+		.blog-list-card__excerpt {
+			font-size: 16px;
+			line-height: 1.6;
+			color: #666;
+			margin-bottom: 16px;
+		}
+
+		.blog-post-cover {
+			margin-bottom: 28px;
+			border-radius: 6px;
+			overflow: hidden;
+		}
+
+		.blog-post-cover img {
+			width: 100%;
+			height: auto;
+			max-height: 520px;
+			object-fit: cover;
+			display: block;
+		}
+
+		.blog-post-body {
+			font-size: 16px;
+			line-height: 1.75;
+		}
+
+		.blog-post-body img {
+			max-width: 100%;
+			height: auto;
+		}
+
+		.blog-post-body iframe {
+			max-width: 100%;
+		}
+
+		.blog-login-modal {
+			border: 0;
+			border-radius: 6px;
+			overflow: hidden;
+			box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+		}
+
+		.blog-login-modal__header {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			background: #ff2a2a;
+			border: 0;
+			padding: 14px 18px;
+		}
+
+		.blog-login-modal__brand {
+			display: flex;
+			align-items: center;
+			min-width: 0;
+			flex: 1;
+		}
+
+		.blog-login-modal__header-right {
+			display: flex;
+			align-items: center;
+			gap: 14px;
+			flex-shrink: 0;
+		}
+
+		.blog-login-modal__logo {
+			height: 36px;
+			width: auto;
+			flex-shrink: 0;
+		}
+
+		.blog-login-modal__header .modal-title {
+			margin: 0;
+			color: #fff;
+			font-size: 18px;
+			font-weight: 700;
+			text-transform: uppercase;
+			letter-spacing: 0.04em;
+		}
+
+		.blog-login-modal__close {
+			margin: 0;
+			padding: 0;
+			float: none;
+			color: #fff;
+			opacity: 0.9;
+			text-shadow: none;
+			font-size: 28px;
+			line-height: 1;
+		}
+
+		.blog-login-modal__close:hover {
+			color: #fff;
+			opacity: 1;
+		}
+
+		.blog-login-modal .modal-body {
+			padding: 24px 22px 20px;
+		}
+
+		.blog-login-modal .modal-footer {
+			border-top: 1px solid #eee;
+			padding: 16px 22px 22px;
+			justify-content: stretch;
+		}
+
+		.blog-login-modal__google {
+			display: inline-flex;
+			align-items: center;
+			justify-content: center;
+			gap: 10px;
+			width: 100%;
+			padding: 12px 16px;
+			border: 2px solid #ff2a2a;
+			border-radius: 4px;
+			background: #ff2a2a;
+			color: #fff;
+			font-size: 15px;
+			font-weight: 600;
+			line-height: 1.2;
+			cursor: pointer;
+			transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+		}
+
+		.blog-login-modal__google:hover:not(:disabled) {
+			background: #e02424;
+			border-color: #e02424;
+			color: #fff;
+		}
+
+		.blog-login-modal__google:disabled {
+			opacity: 0.65;
+			cursor: not-allowed;
+		}
+
+		.blog-login-modal__google-icon {
+			width: 20px;
+			height: 20px;
+			flex-shrink: 0;
+			background: #fff;
+			border-radius: 50%;
+			padding: 2px;
+			box-sizing: border-box;
+		}
+
+		.blog-login-modal__cancel {
+			width: 100%;
+			padding: 12px 16px;
+			border: 2px solid #ff2a2a;
+			border-radius: 4px;
+			background: #fff;
+			color: #ff2a2a;
+			font-size: 15px;
+			font-weight: 600;
+			line-height: 1.2;
+			cursor: pointer;
+			transition: background 0.15s ease, color 0.15s ease;
+		}
+
+		.blog-login-modal__cancel:hover {
+			background: #ff2a2a;
+			color: #fff;
 		}
 
 		@media (max-width: 767.98px) {
@@ -208,10 +309,6 @@
 			.dlab-bnr-inr {
 				margin-bottom: 0 !important;
 				padding-bottom: 0 !important;
-			}
-
-			.section-full.bg-gray.content-inner.bg-img-fix {
-				margin-top: 0 !important;
 			}
 
 			.partner-list {
@@ -243,22 +340,6 @@
 				height: 34px;
 				line-height: 34px;
 			}
-
-			.character-filter-tabs .tab-pane .row.sp10>div {
-				flex: 0 0 100%;
-				max-width: 100%;
-			}
-
-			.character-filter-tabs .tab-pane .row.sp10>div.filter-narrow {
-				flex: 0 0 100%;
-				max-width: 100%;
-			}
-
-			.character-filter-tabs .tab-pane input.form-control,
-			.character-filter-tabs .tab-pane select,
-			.character-filter-tabs .tab-pane .site-button.btn-block {
-				max-width: 100%;
-			}
 		}
 	</style>
 
@@ -278,7 +359,6 @@
 							<a href="index.html"><img src="images/logo-white.png" alt=""></a>
 						</div>
 						<!-- nav toggle button -->
-						<!-- nav toggle button -->
 						<button class="navbar-toggler collapsed navicon justify-content-end" type="button"
 							data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown"
 							aria-expanded="false" aria-label="Toggle navigation">
@@ -286,7 +366,6 @@
 							<span></span>
 							<span></span>
 						</button>
-						<!-- extra nav -->
 						<!-- main nav -->
 						<div class="header-nav navbar-collapse collapse justify-content-end" id="navbarNavDropdown">
 							<ul class="nav navbar-nav">
@@ -294,6 +373,17 @@
 								<li><a href="index.html#apps-info">Sobre</a> </li>
 								<li><a href="map.html">Mapa</a> </li>
 								<li><a href="blog.html">Blog</a> </li>
+								<li class="blog-auth-nav blog-auth-nav--account d-none" id="blogAuthLogin"><a href="#"
+										class="blog-auth-nav__login-link" data-toggle="modal"
+										data-target="#blogLoginModal">Entrar</a></li>
+								<li class="blog-auth-nav blog-auth-nav--account d-none" id="blogAuthUser">
+									<div class="blog-auth-nav__account">
+										<span id="blogAuthUserLabel" class="blog-auth-nav__name"></span>
+										<a href="#" id="blogAuthLogout" class="blog-auth-nav__logout">Sair</a>
+									</div>
+								</li>
+								<li class="blog-auth-nav blog-auth-nav--cta d-none" id="blogAuthNewPost"><a
+										href="blog-create.html" class="blog-auth-nav__cta">Novo post</a></li>
 							</ul>
 						</div>
 					</div>
@@ -308,144 +398,40 @@
 				style="background-image:url(images/main-slider/slide1.jpg);">
 				<div class="container">
 					<div class="dlab-bnr-inr-entry">
-						<h1 class="text-white">Política de Privacidade</h1>
+						<h1 class="text-white" id="blogPostBannerTitle">Publicação</h1>
 						<div class="breadcrumb-row">
 							<ul class="list-inline">
 								<li><a href="index.html">Home</a></li>
-								<li>Política de Privacidade</li>
+								<li><a href="blog.html">Blog</a></li>
+								<li id="blogPostBreadcrumbTitle">Publicação</li>
 							</ul>
 						</div>
 					</div>
 				</div>
 			</div>
 			<div class="content-block">
-				<div class="section-full p-t80">
+				<div class="section-full content-inner">
 					<div class="container">
-						<div class="row">
-							<div class="col-lg-12 m-b30 text-left">
-								<h4 class="font-weight-700">Política de Privacidade – Andarilhos das Terras Livres</h4>
-								<p class="font-18">O Andarilhos das Terras Livres acredita que a privacidade e a
-									transparência são fundamentais. Por isso, disponibilizamos este documento para
-									esclarecer como as informações são coletadas, utilizadas e disponibilizadas aos
-									usuários.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Objetivo desta política</h4>
-								<p class="font-18">Esta política tem como objetivo informar de forma clara e
-									transparente como os dados fornecidos pelos usuários são tratados dentro do site.
-								</p>
-								<p class="font-18">Ao fornecer seus dados, o usuário declara estar ciente e de acordo
-									com as condições aqui descritas.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Quais dados são coletados</h4>
-								<p class="font-18">Os únicos dados pessoais que podem ser informados pelos usuários são:
-								</p>
-								<ul class="list-circle primary m-a0">
-									<li>Nome</li>
-									<li>Localização</li>
-									<li>Telefone</li>
-								</ul>
-								<p class="font-18 m-t15">O fornecimento dessas informações é totalmente opcional.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Forma de coleta e armazenamento</h4>
-								<p class="font-18">Os dados são inseridos voluntariamente pelos usuários em uma planilha
-									aberta, acessível publicamente.</p>
-								<p class="font-18">Essa planilha é:</p>
-								<ul class="list-circle primary m-a0">
-									<li>Gerenciada por serviços do Google</li>
-									<li>De acesso livre para qualquer pessoa com o link</li>
-									<li>Não possui controle restrito por parte do site</li>
-								</ul>
-								<p class="font-18 m-t15">O Andarilhos das Terras Livres não realiza armazenamento
-									próprio desses dados fora da planilha.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Uso e compartilhamento dos dados</h4>
-								<p class="font-18">Os dados informados:</p>
-								<ul class="list-circle primary m-a0">
-									<li>São visíveis publicamente na planilha</li>
-									<li>Podem ser acessados por qualquer pessoa</li>
-									<li>Não são controlados, moderados ou restringidos pelo site</li>
-								</ul>
-								<p class="font-18 m-t15">Dessa forma, o usuário está ciente de que, ao inserir seus
-									dados:</p>
-								<ul class="list-circle primary m-a0 m-t10">
-									<li>Está voluntariamente tornando-os públicos</li>
-									<li>Assume os riscos relacionados à exposição dessas informações</li>
-								</ul>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Exclusão e controle dos dados (LGPD)</h4>
-								<p class="font-18">Em conformidade com a Lei Geral de Proteção de Dados (LGPD), o
-									usuário pode, a qualquer momento:</p>
-								<ul class="list-circle primary m-a0">
-									<li>Excluir seus próprios dados diretamente da planilha</li>
-									<li>Editar ou corrigir as informações inseridas</li>
-									<li>Optar por não fornecer ou remover totalmente seus dados</li>
-								</ul>
-								<p class="font-18 m-t15">A gestão, edição e exclusão dos dados são de responsabilidade
-									do próprio usuário que realizou o cadastro.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Responsabilidade sobre os dados</h4>
-								<p class="font-18">O Andarilhos das Terras Livres:</p>
-								<p class="font-18">Não se responsabiliza pelo armazenamento, uso ou divulgação dos dados
-									pessoais, uma vez que:</p>
-								<ul class="list-circle primary m-a0">
-									<li>A planilha é pública</li>
-									<li>O acesso é irrestrito</li>
-									<li>O preenchimento é opcional</li>
-								</ul>
-								<p class="font-18 m-t15">A responsabilidade pelo fornecimento, manutenção e remoção das
-									informações é exclusivamente do usuário.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12 m-b30">
-								<h4 class="font-weight-700">Links externos</h4>
-								<p class="font-18">O site pode conter links para serviços de terceiros, incluindo:</p>
-								<ul class="list-circle primary m-a0">
-									<li>Plataforma do Google (planilha)</li>
-									<li>Grupo externo no WhatsApp</li>
-								</ul>
-								<p class="font-18 m-t15">Ao acessar esses links, o usuário estará sujeito às políticas
-									de privacidade próprias dessas plataformas.</p>
-								<p class="font-18">O Andarilhos das Terras Livres não se responsabiliza pelas práticas,
-									coleta ou uso de dados realizados por terceiros, incluindo o WhatsApp ou qualquer
-									outro serviço externo.</p>
-								<div class="dlab-divider bg-gray-dark"></div>
-							</div>
-							<div class="col-lg-12">
-								<h4 class="font-weight-700">Alterações nesta política</h4>
-								<p class="font-18">Esta Política de Privacidade pode ser atualizada a qualquer momento
-									para refletir mudanças no funcionamento do site ou em exigências legais.</p>
-								<p class="font-18">Recomendamos que o usuário revise este documento periodicamente.</p>
-							</div>
+						<div id="blogPostLoading" class="text-center p-a40">
+							<p class="font-16 m-b0">Carregando publicação…</p>
 						</div>
-					</div>
-				</div>
-				<div class="section-full p-tb80">
-					<div class="container">
-						<div class="row">
-							<div class="col-lg-12">
-								<div class="text-center max-w600 m-auto ">
-									<div class="m-b20"><i class="fa fa-quote-left font-45 text-primary"></i></div>
-									<h4 class="text-uppercase font-weight-700 font-30 m-b20">Quer conversar com a gente
-										sobre tíbia?</h4>
-									<a href="https://chat.whatsapp.com/JMGZ9tORv6c65KOQAD0xAQ" target="_blank"
-										rel="noopener noreferrer" class="site-button radius-xl outline outline-2"><span
-											class="p-lr10"><i class="fa fa-whatsapp m-r5"></i>Grupo do
-											WhatsApp</span></a>
-								</div>
+						<div id="blogPostError" class="alert alert-danger d-none text-center" role="alert"></div>
+						<article id="blogPostArticle" class="d-none max-w900 m-auto">
+							<div class="blog-post-cover d-none" id="blogPostCoverWrap">
+								<img id="blogPostCover" alt="">
 							</div>
-						</div>
+							<div class="dlab-post-meta m-b20">
+								<ul id="blogPostMeta"></ul>
+							</div>
+							<h2 class="title m-b30" id="blogPostTitle"></h2>
+							<div class="blog-post-body" id="blogPostBody"></div>
+							<div class="m-t30 d-none" id="blogPostEditWrap">
+								<a href="#" id="blogPostEditLink" class="site-button-link">Editar publicação</a>
+							</div>
+							<div class="m-t40 text-center">
+								<a href="blog.html" class="site-button-link">← Voltar ao blog</a>
+							</div>
+						</article>
 					</div>
 				</div>
 				<!-- Blog preview -->
@@ -469,6 +455,23 @@
 					</div>
 				</div>
 				<!-- Blog preview END -->
+				<div class="section-full p-tb80">
+					<div class="container">
+						<div class="row">
+							<div class="col-lg-12">
+								<div class="text-center max-w600 m-auto ">
+									<div class="m-b20"><i class="fa fa-quote-left font-45 text-primary"></i></div>
+									<h4 class="text-uppercase font-weight-700 font-30 m-b20">Quer conversar com a gente
+										sobre tíbia?</h4>
+									<a href="https://chat.whatsapp.com/JMGZ9tORv6c65KOQAD0xAQ" target="_blank"
+										rel="noopener noreferrer" class="site-button radius-xl outline outline-2"><span
+											class="p-lr10"><i class="fa fa-whatsapp m-r5"></i>Grupo do
+											WhatsApp</span></a>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -558,6 +561,51 @@
 		</div>
 	</footer>
 	<!-- Footer END -->
+
+	<!-- Login modal -->
+	<div class="modal fade" id="blogLoginModal" tabindex="-1" role="dialog" aria-labelledby="blogLoginModalLabel"
+		aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content blog-login-modal">
+				<div class="modal-header blog-login-modal__header">
+					<div class="blog-login-modal__brand">
+						<h5 class="modal-title" id="blogLoginModalLabel">Entrar</h5>
+					</div>
+					<div class="blog-login-modal__header-right">
+						<img src="images/logo-white.png" alt="Andarilhos Free" class="blog-login-modal__logo">
+						<button type="button" class="close blog-login-modal__close" data-dismiss="modal"
+							aria-label="Fechar">
+							<span aria-hidden="true">&times;</span>
+						</button>
+					</div>
+				</div>
+				<div class="modal-body">
+					<p class="font-14 m-b20">Use sua conta Google para a área logada.</p>
+					<div id="blogLoginConfigNotice" class="alert alert-warning d-none" role="alert">
+						Login indisponível neste ambiente.
+					</div>
+					<button type="button" class="blog-login-modal__google" id="blogGoogleSignIn">
+						<svg class="blog-login-modal__google-icon" viewBox="0 0 48 48" aria-hidden="true">
+							<path fill="#EA4335"
+								d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+							<path fill="#4285F4"
+								d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.56 2.95-2.23 5.45-4.76 7.11l7.73 6c4.51-4.18 7.09-10.36 7.09-17.58z" />
+							<path fill="#FBBC05"
+								d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+							<path fill="#34A853"
+								d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+						</svg>
+						Continuar com Google
+					</button>
+					<p id="blogLoginError" class="text-danger m-t15 m-b0 font-14 text-center" role="alert"></p>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="blog-login-modal__cancel" data-dismiss="modal">Cancelar</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
 	<!-- scroll top button -->
 	<button class="scroltop fa fa-arrow-up"></button>
 	<!-- JavaScript  files ========================================= -->
@@ -574,9 +622,9 @@
 	<script src="plugins/masonry/masonry.filter.js"></script><!-- MASONRY  -->
 	<script src="plugins/owl-carousel/owl.carousel.js"></script><!-- OWL  SLIDER  -->
 	<script src="js/dz.carousel.js"></script><!-- SORTCODE FUCTIONS  -->
-	<script src='https://www.google.com/recaptcha/api.js'></script> <!-- Google API For Recaptcha  -->
 	<script src="js/dz.ajax.js"></script><!-- Contact Us -->
 	<script src="js/custom.js"></script>
+	<!-- Firebase Auth (blog) -->
 	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 	<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -584,8 +632,9 @@
 	<script src="js/site-auth.js"></script>
 	<script src="js/blog-common.js"></script>
 	<script src="js/blog-preview.js"></script>
-	<!-- custom fuctions  -->
-	<script src="js/characters-list.js"></script>
+	<script src="js/blog-auth.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/dompurify@3.2.4/dist/purify.min.js"></script>
+	<script src="js/blog-post-view.js"></script>
 </body>
 
 </html>

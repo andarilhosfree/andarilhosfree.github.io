@@ -1,0 +1,15 @@
+# Local secrets — never commit
+.env
+.env.*
+
+# Generated at build/deploy (CI secrets or local .env)
+js/firebase-config.js
+js/imgbb-config.js
+
+# Python / tooling artifacts
+__pycache__/
+*.py[cod]
+pip-unpack-*/
+
+# OS
+.DS_Store

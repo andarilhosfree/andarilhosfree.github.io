@@ -32,6 +32,8 @@
     <link rel="stylesheet" type="text/css" href="css/style.css">
     <link class="skin" rel="stylesheet" type="text/css" href="css/skin/skin-1.css">
     <link rel="stylesheet" type="text/css" href="css/templete.css">
+    <link rel="stylesheet" type="text/css" href="css/blog-auth-nav.css">
+    <link rel="stylesheet" type="text/css" href="css/blog-preview.css">
 
     <!-- Leaflet (map viewer) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -77,6 +79,407 @@
             color: #fff;
         }
 
+        #mapLoginError,
+        #mapCommentError {
+            min-height: 1.25em;
+        }
+
+        .blog-login-modal {
+            border: 0;
+            border-radius: 6px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        .blog-login-modal__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #ff2a2a;
+            border: 0;
+            padding: 14px 18px;
+        }
+
+        .blog-login-modal__brand {
+            display: flex;
+            align-items: center;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .blog-login-modal__header-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+
+        .blog-login-modal__logo {
+            height: 36px;
+            width: auto;
+            flex-shrink: 0;
+        }
+
+        .blog-login-modal__header .modal-title {
+            margin: 0;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .blog-login-modal__close {
+            margin: 0;
+            padding: 0;
+            float: none;
+            color: #fff;
+            opacity: 0.9;
+            text-shadow: none;
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .blog-login-modal__close:hover {
+            color: #fff;
+            opacity: 1;
+        }
+
+        .blog-login-modal .modal-body {
+            padding: 24px 22px 20px;
+        }
+
+        .blog-login-modal .modal-footer {
+            border-top: 1px solid #eee;
+            padding: 16px 22px 22px;
+            justify-content: stretch;
+        }
+
+        .blog-login-modal__google {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ff2a2a;
+            border-radius: 4px;
+            background: #ff2a2a;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+        }
+
+        .blog-login-modal__google:hover:not(:disabled) {
+            background: #e02424;
+            border-color: #e02424;
+            color: #fff;
+        }
+
+        .blog-login-modal__google:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .blog-login-modal__google-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            background: #fff;
+            border-radius: 50%;
+            padding: 2px;
+            box-sizing: border-box;
+        }
+
+        .blog-login-modal__cancel {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ff2a2a;
+            border-radius: 4px;
+            background: #fff;
+            color: #ff2a2a;
+            font-size: 15px;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+            transition: background 0.15s ease, color 0.15s ease;
+        }
+
+        .blog-login-modal__cancel:hover {
+            background: #fff5f5;
+        }
+
+        .map-comment-modal__textarea {
+            width: 100%;
+            min-height: 100px;
+            resize: vertical;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .map-comment-modal__counter {
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        .map-comment-modal__counter.is-warning {
+            color: #c62828;
+            font-weight: 600;
+        }
+
+        .map-comment-modal__creatures {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .map-comment-modal__creature {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: #eef3fb;
+            color: #1b2a4a;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .map-comment-toast {
+            position: absolute;
+            left: 50%;
+            bottom: 18px;
+            transform: translateX(-50%) translateY(12px);
+            z-index: 1400;
+            max-width: min(92%, 420px);
+            padding: 10px 14px;
+            border-radius: 6px;
+            background: rgba(27, 42, 74, 0.94);
+            color: #fff;
+            font-size: 13px;
+            line-height: 1.35;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+        }
+
+        .map-comment-toast.is-visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .tibia-comments-control a {
+            text-decoration: none;
+        }
+
+        .tibia-comments-control__btn {
+            display: block;
+            width: auto;
+            min-width: 96px;
+            padding: 0 8px;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 30px;
+            text-align: center;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tibia-comments-control__btn.is-off {
+            opacity: 0.55;
+        }
+
+        .leaflet-marker-icon.tibia-comment-marker {
+            background: transparent !important;
+            border: 0 !important;
+        }
+
+        .tibia-comment-marker {
+            position: relative;
+            width: 32px;
+            height: 36px;
+        }
+
+        .tibia-comment-marker__bubble {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            margin: 0 auto;
+            border-radius: 50%;
+            background: #1b6fd8;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .tibia-comment-marker__svg {
+            display: block;
+            margin-top: -1px;
+            pointer-events: none;
+        }
+
+        .tibia-comment-marker__bubble::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: -4px;
+            width: 8px;
+            height: 8px;
+            margin-left: -5px;
+            border-radius: 50%;
+            background: #1b6fd8;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .leaflet-comment-pane {
+            pointer-events: auto;
+        }
+
+        .tibia-comment-popup-wrap {
+            z-index: 1400;
+        }
+
+        .tibia-comment-popup-wrap .leaflet-popup-content {
+            margin: 12px 32px 12px 14px;
+        }
+
+        .tibia-comment-popup-wrap .leaflet-popup-close-button {
+            top: 8px;
+            right: 8px;
+            width: 22px;
+            height: 22px;
+            font-size: 18px;
+            line-height: 22px;
+            color: #666;
+        }
+
+        .tibia-comment-popup__meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            margin-bottom: 8px;
+            padding-right: 4px;
+        }
+
+        .tibia-comment-popup__author {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1b2a4a;
+            line-height: 1.25;
+        }
+
+        .tibia-comment-popup__date {
+            font-size: 11px;
+            color: #666;
+            line-height: 1.25;
+            white-space: nowrap;
+        }
+
+        .tibia-comment-popup__text {
+            margin: 0 0 8px;
+            font-size: 13px;
+            line-height: 1.35;
+            color: #222;
+            word-break: break-word;
+        }
+
+        .tibia-comment-popup__votes {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tibia-comment-popup__vote {
+            width: 28px;
+            height: 24px;
+            padding: 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: #f5f5f5;
+            font-size: 12px;
+            line-height: 1;
+            cursor: pointer;
+            color: #444;
+        }
+
+        .tibia-comment-popup__vote:hover {
+            background: #eee;
+        }
+
+        .tibia-comment-popup__vote.is-active {
+            background: #1b6fd8;
+            border-color: #1b6fd8;
+            color: #fff;
+        }
+
+        .tibia-comment-popup__vote--down.is-active {
+            background: #c62828;
+            border-color: #c62828;
+        }
+
+        .tibia-comment-popup__score {
+            min-width: 24px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .tibia-comment-popup__actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 4px;
+        }
+
+        .tibia-comment-popup__delete {
+            padding: 5px 12px;
+            border: 1px solid #c62828;
+            border-radius: 4px;
+            background: #fff;
+            color: #c62828;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.2;
+            cursor: pointer;
+        }
+
+        .tibia-comment-popup__delete:hover {
+            background: #ffebee;
+        }
+
+        .tibia-comment-popup__creatures {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 6px;
+        }
+
+        .tibia-comment-popup__creature {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: #eef3fb;
+            color: #1b2a4a;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
         .map-content-area {
             position: relative;
             width: 100%;
@@ -108,6 +511,7 @@
         }
 
         #tibia-map {
+            position: relative;
             width: 100%;
             flex: 1 1 auto;
             min-height: 0;
@@ -118,7 +522,7 @@
             top: 12px;
             left: 58px;
             right: auto;
-            z-index: 1100;
+            z-index: 1300;
             width: min(340px, calc(100% - 72px));
             max-height: calc(100% - 24px);
             overflow: visible;
@@ -377,6 +781,8 @@
             top: 32px;
             white-space: nowrap;
             padding: 4px 8px;
+            margin: 0;
+            border: 0;
             border-radius: 4px;
             background: #1b2a4a;
             color: #fff;
@@ -384,7 +790,7 @@
             font-weight: 600;
             line-height: 1.2;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-            pointer-events: none;
+            cursor: pointer;
         }
 
         .tibia-point-marker:hover .tibia-point-marker__comment,
@@ -440,7 +846,6 @@
         .tibia-map-interaction-overlay {
             position: absolute;
             inset: 0;
-            /* Above zoom/floor/creature chrome so +/- cannot fire while locked. */
             z-index: 1200;
             display: flex;
             align-items: center;
@@ -451,11 +856,11 @@
             background: rgba(255, 255, 255, 0.65);
             backdrop-filter: blur(3px);
             -webkit-backdrop-filter: blur(3px);
+            pointer-events: auto;
         }
 
-        /* While locked, ignore clicks on Leaflet chrome under the overlay. */
-        #tibia-map.is-interaction-locked .leaflet-control-container,
-        #tibia-map.is-interaction-locked .tibia-creature-panel {
+        /* While locked, ignore Leaflet controls under the overlay (creature panel stays above). */
+        #tibia-map.is-interaction-locked .leaflet-control-container {
             pointer-events: none;
         }
 
@@ -474,6 +879,17 @@
         @media (max-width: 767.98px) {
             .tibia-map-interaction-overlay__text {
                 font-size: 18px;
+            }
+
+            /* Keep creature search and top chrome out of the unlock overlay. */
+            #tibia-map.is-interaction-locked .tibia-map-interaction-overlay {
+                clip-path: inset(72px 0 0 0);
+                align-items: flex-end;
+                padding-bottom: 28px;
+            }
+
+            .tibia-creature-panel {
+                max-width: calc(100% - 64px);
             }
         }
 
@@ -553,6 +969,16 @@
                                 <li><a href="index.html">Home</a> </li>
                                 <li><a href="index.html#apps-info">Sobre</a> </li>
                                 <li><a href="map.html">Mapa</a> </li>
+                                <li><a href="blog.html">Blog</a> </li>
+                                <li class="blog-auth-nav blog-auth-nav--account d-none" id="mapAuthLogin"><a href="#"
+                                        class="blog-auth-nav__login-link" data-toggle="modal"
+                                        data-target="#mapLoginModal">Entrar</a></li>
+                                <li class="blog-auth-nav blog-auth-nav--account d-none" id="mapAuthUser">
+                                    <div class="blog-auth-nav__account">
+                                        <span id="mapAuthUserLabel" class="blog-auth-nav__name"></span>
+                                        <a href="#" id="mapAuthLogout" class="blog-auth-nav__logout">Sair</a>
+                                    </div>
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -626,6 +1052,30 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Blog preview -->
+            <div class="content-block blog-preview-block">
+                <div class="section-full content-inner">
+                    <div class="container">
+                        <div class="section-head text-center">
+                            <h2 class="title">Últimas publicações</h2>
+                            <p>Novidades, dicas e conteúdos da comunidade Andarilhos Free.</p>
+                        </div>
+                        <div id="blogPreviewLoading" class="text-center p-a20">
+                            <p class="font-16 m-b0">Carregando publicações…</p>
+                        </div>
+                        <div id="blogPreviewError" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="blogPreviewEmpty" class="text-center p-a40 d-none">
+                            <p class="font-16 m-b0">Nenhuma publicação ainda. Volte em breve!</p>
+                        </div>
+                        <div id="blogPreviewList" class="row"></div>
+                        <div class="blog-preview__cta text-center">
+                            <a href="blog.html" class="site-button radius-xl">Ver todos os posts</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Blog preview END -->
         </div>
     </div>
 
@@ -705,6 +1155,83 @@
     </footer>
     <!-- Footer END -->
 
+    <!-- Login modal -->
+    <div class="modal fade" id="mapLoginModal" tabindex="-1" role="dialog" aria-labelledby="mapLoginModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content blog-login-modal">
+                <div class="modal-header blog-login-modal__header">
+                    <div class="blog-login-modal__brand">
+                        <h5 class="modal-title" id="mapLoginModalLabel">Entrar para comentar</h5>
+                    </div>
+                    <div class="blog-login-modal__header-right">
+                        <img src="images/logo-white.png" alt="Andarilhos Free" class="blog-login-modal__logo">
+                        <button type="button" class="close blog-login-modal__close" data-dismiss="modal"
+                            aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <p class="font-14 m-b20">Use sua conta Google para adicionar comentários no mapa.</p>
+                    <div id="mapLoginConfigNotice" class="alert alert-warning d-none" role="alert">
+                        Login indisponível neste ambiente.
+                    </div>
+                    <button type="button" class="blog-login-modal__google" id="mapGoogleSignIn">
+                        <svg class="blog-login-modal__google-icon" viewBox="0 0 48 48" aria-hidden="true">
+                            <path fill="#EA4335"
+                                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                            <path fill="#4285F4"
+                                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.56 2.95-2.23 5.45-4.76 7.11l7.73 6c4.51-4.18 7.09-10.36 7.09-17.58z" />
+                            <path fill="#FBBC05"
+                                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                            <path fill="#34A853"
+                                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                        </svg>
+                        Continuar com Google
+                    </button>
+                    <p id="mapLoginError" class="text-danger m-t15 m-b0 font-14 text-center" role="alert"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="blog-login-modal__cancel" data-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Comment compose modal -->
+    <div class="modal fade" id="mapCommentModal" tabindex="-1" role="dialog" aria-labelledby="mapCommentModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content blog-login-modal">
+                <div class="modal-header blog-login-modal__header">
+                    <div class="blog-login-modal__brand">
+                        <h5 class="modal-title" id="mapCommentModalLabel">Adicionar comentário</h5>
+                    </div>
+                    <div class="blog-login-modal__header-right">
+                        <button type="button" class="close blog-login-modal__close" data-dismiss="modal"
+                            aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="mapCommentCreatures" class="map-comment-modal__creatures" hidden></div>
+                    <label for="mapCommentText" class="font-14 m-b10 d-block">Comentário (máx. 255 caracteres)</label>
+                    <textarea id="mapCommentText" class="map-comment-modal__textarea" maxlength="255"
+                        placeholder="Descreva o que há neste ponto…"></textarea>
+                    <div id="mapCommentCounter" class="map-comment-modal__counter">0/255</div>
+                    <p id="mapCommentError" class="text-danger m-t10 m-b0 font-14" role="alert"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="blog-login-modal__cancel m-r10" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="blog-login-modal__google" id="mapCommentSubmit"
+                        style="width: auto; flex: 1;">Publicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- scroll top button -->
     <button class="scroltop fa fa-arrow-up"></button>
 
@@ -726,9 +1253,20 @@
     <script src="js/dz.ajax.js"></script><!-- Contact Us -->
     <script src="js/custom.js"></script>
 
+    <!-- Firebase (map comments) -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js" onerror="window.ANDARILHOS_FIREBASE_CONFIG=null"></script>
+    <script src="js/site-auth.js"></script>
+    <script src="js/blog-common.js"></script>
+    <script src="js/blog-preview.js"></script>
+    <script src="js/map-auth.js"></script>
+
     <!-- Map viewer -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="js/tibia-map-viewer.js"></script>
+    <script src="js/map-comments.js"></script>
     <!-- custom fuctions  -->
     <script src="js/characters-list.js"></script>
 </body>

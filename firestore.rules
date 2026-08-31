@@ -1,0 +1,217 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isActiveMember() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/members/$(request.auth.uid))
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.active == true;
+    }
+
+    function memberHas(permission) {
+      return isActiveMember()
+        && get(/databases/$(database)/documents/members/$(request.auth.uid)).data.permissions[permission] == true;
+    }
+
+    function memberIsAdmin() {
+      return memberHas('admin');
+    }
+
+    function validCoverUrl(value) {
+      return value == null
+        || (value is string && value.size() <= 2000
+            && (value.matches('^https://[a-zA-Z0-9].*') || value.matches('^images/[a-zA-Z0-9/_.-]+$')));
+    }
+
+    function validPostWrite() {
+      let data = request.resource.data;
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.slug is string
+        && data.slug.size() > 0
+        && data.slug.size() <= 80
+        && data.contentHtml is string
+        && data.contentHtml.size() > 0
+        && data.contentHtml.size() <= 500000
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && data.status in ['draft', 'published']
+        && data.authorUid == request.auth.uid
+        && data.createdAt == request.time
+        && data.updatedAt == request.time
+        && (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() <= 500))
+        && validCoverUrl(data.get('coverUrl', null));
+    }
+
+    function validPostUpdate() {
+      let data = request.resource.data;
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.slug is string
+        && data.slug.size() > 0
+        && data.slug.size() <= 80
+        && data.contentHtml is string
+        && data.contentHtml.size() > 0
+        && data.contentHtml.size() <= 500000
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && data.status in ['draft', 'published']
+        && data.authorUid == resource.data.authorUid
+        && data.authorUid == request.auth.uid
+        && data.createdAt == resource.data.createdAt
+        && data.updatedAt == request.time
+        && (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() <= 500))
+        && validCoverUrl(data.get('coverUrl', null));
+    }
+
+    function validPostAdminUpdate() {
+      let data = request.resource.data;
+      return data.title is string
+        && data.title.size() > 0
+        && data.title.size() <= 200
+        && data.slug is string
+        && data.slug.size() > 0
+        && data.slug.size() <= 80
+        && data.contentHtml is string
+        && data.contentHtml.size() > 0
+        && data.contentHtml.size() <= 500000
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && data.status in ['draft', 'published']
+        && data.authorUid == resource.data.authorUid
+        && data.createdAt == resource.data.createdAt
+        && data.updatedAt == request.time
+        && (!('excerpt' in data) || (data.excerpt is string && data.excerpt.size() <= 500))
+        && validCoverUrl(data.get('coverUrl', null));
+    }
+
+    match /members/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && !exists(/databases/$(database)/documents/members/$(uid))
+        && request.resource.data.active == true
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.permissions.mapComments == true
+        && request.resource.data.permissions.blog == false
+        && request.resource.data.permissions.admin == false
+        && request.resource.data.keys().hasAll(['active', 'email', 'displayName', 'permissions', 'createdAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() <= 120
+        && request.resource.data.permissions.keys().hasOnly(['blog', 'mapComments', 'admin'])
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if resource.data.status == 'published'
+        || (request.auth != null && resource.data.authorUid == request.auth.uid)
+        || memberIsAdmin();
+      allow create: if (memberHas('blog') || memberIsAdmin()) && validPostWrite();
+      allow update: if (memberHas('blog') && validPostUpdate())
+        || (memberIsAdmin() && validPostAdminUpdate());
+      allow delete: if (memberHas('blog') && resource.data.authorUid == request.auth.uid)
+        || memberIsAdmin();
+    }
+
+    function validMapCoord(value) {
+      return value is int && value >= 0 && value <= 65535;
+    }
+
+    function validMapZ(value) {
+      return value is int && value >= 0 && value <= 15;
+    }
+
+    function validCreaturesField(value) {
+      return value is list
+        && value.size() <= 10;
+    }
+
+    function validCommentCreate() {
+      let data = request.resource.data;
+      return data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 255
+        && data.authorUid == request.auth.uid
+        && data.authorName is string
+        && data.authorName.size() > 0
+        && data.authorName.size() <= 120
+        && validMapCoord(data.worldX)
+        && validMapCoord(data.worldY)
+        && validMapZ(data.z)
+        && validCreaturesField(data.creatures)
+        && data.upCount == 0
+        && data.downCount == 0
+        && data.createdAt == request.time
+        && data.keys().hasOnly(['text', 'authorUid', 'authorName', 'worldX', 'worldY', 'z', 'creatures', 'createdAt', 'upCount', 'downCount']);
+    }
+
+    function validCommentAuthorUpdate() {
+      let data = request.resource.data;
+      return data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 255
+        && data.authorUid == resource.data.authorUid
+        && data.authorUid == request.auth.uid
+        && data.authorName == resource.data.authorName
+        && data.worldX == resource.data.worldX
+        && data.worldY == resource.data.worldY
+        && data.z == resource.data.z
+        && data.creatures == resource.data.creatures
+        && data.createdAt == resource.data.createdAt
+        && data.upCount == resource.data.upCount
+        && data.downCount == resource.data.downCount;
+    }
+
+    function validCommentVoteCountUpdate() {
+      let data = request.resource.data;
+      return data.text == resource.data.text
+        && data.authorUid == resource.data.authorUid
+        && data.authorName == resource.data.authorName
+        && data.worldX == resource.data.worldX
+        && data.worldY == resource.data.worldY
+        && data.z == resource.data.z
+        && data.creatures == resource.data.creatures
+        && data.createdAt == resource.data.createdAt
+        && data.upCount is int
+        && data.downCount is int
+        && data.upCount >= 0
+        && data.downCount >= 0
+        && data.upCount <= resource.data.upCount + 1
+        && data.downCount <= resource.data.downCount + 1
+        && data.upCount >= resource.data.upCount - 1
+        && data.downCount >= resource.data.downCount - 1;
+    }
+
+    function validVoteWrite() {
+      let data = request.resource.data;
+      return data.value in [1, -1]
+        && data.updatedAt == request.time
+        && data.keys().hasOnly(['value', 'updatedAt']);
+    }
+
+    match /mapComments/{commentId} {
+      allow read: if true;
+      allow create: if memberHas('mapComments') && validCommentCreate();
+      allow update: if memberHas('mapComments')
+        && ((resource.data.authorUid == request.auth.uid && validCommentAuthorUpdate())
+          || validCommentVoteCountUpdate());
+      allow delete: if (memberHas('mapComments') && resource.data.authorUid == request.auth.uid)
+        || memberIsAdmin();
+
+      match /votes/{uid} {
+        allow read: if true;
+        allow create, update: if memberHas('mapComments')
+          && request.auth.uid == uid
+          && validVoteWrite();
+        allow delete: if memberHas('mapComments') && request.auth.uid == uid;
+      }
+    }
+  }
+}
